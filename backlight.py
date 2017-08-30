@@ -13,6 +13,12 @@ from os.path import exists, join
 from sys import stderr
 from time import sleep
 
+try:
+    from docopt import docopt
+except ImportError:
+    print('WARNING: "docopt" not installed. Daemon unavailable.',
+          file=stderr, flush=True)
+
 
 __all__ = [
     'DEFAULT_CONFIG',
@@ -25,6 +31,19 @@ __all__ = [
 TIME_FORMAT = '%H:%M'
 DEFAULT_CONFIG = '/etc/backlight.json'
 BACKLIGHT_BASEDIR = '/sys/class/backlight'
+DAEMON_USAGE = '''backlightd
+
+A screen backlight daemon.
+
+Usage:
+    backlightd [options]
+
+Options:
+    --config=<config_file>, -c  Sets the configuration file.
+    --tick=<seconds>, -t        Sets the daemon's interval [default: 1].
+    --reset, -r                 Reset the brightness before terminating.
+    --help                      Shows this page.
+'''
 
 
 class NoSupportedGraphicsCards(Exception):
@@ -101,21 +120,10 @@ def get_latest_brightness(config, now=None):
     return latest[1]
 
 
-def backlightd(options):
-    """backlightd
+def backlightd():
+    """backlight daemon function."""
 
-    A screen backlight daemon.
-
-    Usage:
-        backlightd [options]
-
-    Options:
-        --config=<config_file>, -c  Sets the configuration file.
-        --tick=<seconds>, -t        Sets the daemon's interval [default: 1].
-        --reset, -r                 Reset the brightness before terminating.
-        --help                      Shows this page.
-    """
-
+    options = docopt(DAEMON_USAGE)
     config_file = options['--config'] or DEFAULT_CONFIG
     tick = int(options['--tick'])
     reset = options['--reset']
@@ -265,6 +273,4 @@ class Daemon():
 
 
 if __name__ == '__main__':
-    from docopt import docopt
-
-    exit(backlightd(docopt(__doc__)))
+    exit(backlightd())
