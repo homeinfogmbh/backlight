@@ -6,6 +6,7 @@ of graphics cards unter '/sys/class/backlight/<graphics_card>/',
 provided they implement both files 'brightness' and 'max_brightness'
 in the respective folder.
 """
+from contextlib import suppress
 from datetime import datetime
 from json import load
 from os import listdir
@@ -48,6 +49,14 @@ Options:
 
 class NoSupportedGraphicsCards(Exception):
     """Indicates that the available graphics cards are not supported."""
+
+    pass
+
+
+class NoLatestEntry(Exception):
+    """Indicates that no latest entry could
+    be determined from the configuration.
+    """
 
     pass
 
@@ -106,7 +115,7 @@ def parse_config(config):
             yield (time, brightness)
 
 
-def get_latest_brightness(config, now=None):
+def get_latest(config, now=None):
     """Returns the last config entry from the provided configuration."""
 
     now = now or datetime.now().time()
@@ -121,8 +130,14 @@ def get_latest_brightness(config, now=None):
             # stop seeking if timstamp is in the future.
             break
 
-    # Fall back to latest value (of previous day)
-    return latest or sorted_values[-1]
+    # Fall back to latest value (of previous day).
+    if latest is None:
+        try:
+            return sorted_values[-1]
+        except IndexError:
+            raise NoLatestEntry() from None
+
+    return latest
 
 
 def backlightd():
@@ -225,11 +240,11 @@ class Daemon():
 
     def __init__(self, config_file, reset=False, tick=1):
         """Sets configuration file, reset flag and tick interval."""
-        self.config_file = config_file
+        self.config = dict(parse_config(load_config(config_file)))
         self.reset = reset
         self.tick = tick
         self.backlight = Backlight()
-        self.config = dict(parse_config(load_config(config_file)))
+        self._initial_brightness = None
         self._current_brightness = None
 
     @property
@@ -251,31 +266,47 @@ class Daemon():
             else:
                 log('Set brightness to {}%.'.format(percent))
 
-    def run(self):
-        """Runs the daemon."""
+    def _startup(self):
+        """Starts up the daemon."""
         log('Starting up...')
         log('Tick is {} second(s).'.format(self.tick))
         log('Detected graphics card: {}.'.format(self.backlight.graphics_card))
-        initial_brightness = self.backlight.percent
-        log('Initial brightness is {}%.'.format(initial_brightness))
+        self._initial_brightness = self.backlight.percent
+        log('Initial brightness is {}%.'.format(self._initial_brightness))
+
+        try:
+            time, self.brightness = get_latest(self.config)
+        except NoLatestEntry:
+            error('Latest entry could not be determined.')
+            error('Falling back to 100%.')
+            self.brightness = 100
+        else:
+            log('Loaded latest setting: {}% from {}.'.format(
+                self.brightness, time))
+
+    def _shutdown(self):
+        """Performs shutdown tasks."""
+        if self.reset:
+            self.brightness = self._initial_brightness
+            log('Reset brightness to {}%.'.format(self._initial_brightness))
+
+        log('Terminating...')
+        return True
+
+    def run(self):
+        """Runs the daemon."""
+        self._startup()
 
         while True:
-            _, brightness = get_latest_brightness(self.config)
-
-            if brightness is not None:
-                self.brightness = brightness
+            with suppress(KeyError):
+                self.brightness = self.config[datetime.now().time()]
 
             try:
                 sleep(self.tick)
             except KeyboardInterrupt:
                 break
 
-        if self.reset:
-            self.brightness = initial_brightness
-            log('Reset brightness to {}%.'.format(initial_brightness))
-
-        log('Terminating...')
-        return True
+        return self._shutdown()
 
 
 if __name__ == '__main__':
