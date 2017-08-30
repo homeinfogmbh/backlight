@@ -115,12 +115,11 @@ def get_latest_brightness(config, now=None):
 
     for time, brightness in sorted_values:
         if time <= now:
-            if latest is None or latest[0] < time:
-                latest = (time, brightness)
-            else:
-                # Since values are sorted by timestamp,
-                # stop seeking if timstamp is in the future.
-                break
+            latest = (time, brightness)
+        else:
+            # Since values are sorted by timestamp,
+            # stop seeking if timstamp is in the future.
+            break
 
     # Fall back to latest value (of previous day)
     return latest or sorted_values[-1]
