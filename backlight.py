@@ -1,16 +1,10 @@
 #! /usr/bin/env python3
-"""backlight.py
+"""A linux screen backlight API and daemon.
 
-A screen backlight API and daemon.
-
-Usage:
-    backlightd [options]
-
-Options:
-    --config=<config_file>, -c  Sets the configuration file.
-    --tick=<seconds>, -t        Sets the daemon's interval [default: 1].
-    --reset, -r                 Reset the brightness before terminating.
-    --help                      Shows this page.
+This module supports getting and setting of the backlight brightness
+of graphics cards unter '/sys/class/backlight/<graphics_card>/',
+provided they implement both files 'brightness' and 'max_brightness'
+in the respective folder.
 """
 from datetime import datetime
 from json import load
@@ -107,8 +101,20 @@ def get_latest_brightness(config, now=None):
     return latest[1]
 
 
-def main(options):
-    """Main method to parse command line arguments and run daemon."""
+def backlightd(options):
+    """backlightd
+
+    A screen backlight daemon.
+
+    Usage:
+        backlightd [options]
+
+    Options:
+        --config=<config_file>, -c  Sets the configuration file.
+        --tick=<seconds>, -t        Sets the daemon's interval [default: 1].
+        --reset, -r                 Reset the brightness before terminating.
+        --help                      Shows this page.
+    """
 
     config_file = options['--config'] or DEFAULT_CONFIG
     tick = int(options['--tick'])
@@ -129,13 +135,22 @@ def main(options):
 class Backlight():
     """Backlight API handler."""
 
-    def __init__(self):
-        """Determines the graphics card and appropriate settings."""
-        for self.graphics_card in listdir(BACKLIGHT_BASEDIR):
+    def __init__(self, *graphics_cards):
+        """Tries all specified graphics cards.
+
+        If none are specified, tries all graphics
+        cards within BACKLIGHT_BASEDIR.
+        """
+        if not graphics_cards:
+            graphics_cards = listdir(BACKLIGHT_BASEDIR)
+
+        for self.graphics_card in graphics_cards:
             if all(exists(file) for file in self._files):
                 break
         else:
             raise NoSupportedGraphicsCards() from None
+
+        self._max_brightness = None
 
     @property
     def _device_path(self):
@@ -161,7 +176,11 @@ class Backlight():
     @property
     def max_brightness(self):
         """Returns the raw maximum brightness."""
-        return int(read_brightness(self._max_brightness_file))
+        if self._max_brightness is None:
+            self._max_brightness = int(read_brightness(
+                self._max_brightness_file))
+
+        return self._max_brightness
 
     @property
     def brightness(self):
@@ -203,28 +222,27 @@ class Daemon():
     def brightness(self):
         """Returns the current brightness."""
         if self._current_brightness is None:
-            return self.backlight.brightness
+            self._current_brightness = self.backlight.percent
 
         return self._current_brightness
 
     @brightness.setter
-    def brightness(self, brightness):
+    def brightness(self, percent):
         """Sets the current brightness."""
-        if brightness != self._current_brightness:
+        if percent != self._current_brightness:
             try:
-                self.backlight.brightness = brightness
+                self._current_brightness = self.backlight.percent = percent
             except ValueError:
-                error('Invalid brightness: {}.'.format(brightness))
+                error('Invalid brightness: {}.'.format(percent))
             else:
-                self._current_brightness = brightness
-                log('Set brightness to {}%.'.format(brightness))
+                log('Set brightness to {}%.'.format(percent))
 
     def run(self):
         """Runs the daemon."""
         log('Starting up...')
         log('Tick is {} second(s).'.format(self.tick))
         log('Detected graphics card: {}.'.format(self.backlight.graphics_card))
-        initial_brightness = self.backlight.brightness
+        initial_brightness = self.backlight.percent
         log('Initial brightness is {}%.'.format(initial_brightness))
 
         while True:
@@ -249,4 +267,4 @@ class Daemon():
 if __name__ == '__main__':
     from docopt import docopt
 
-    exit(main(docopt(__doc__)))
+    exit(backlightd(docopt(__doc__)))
