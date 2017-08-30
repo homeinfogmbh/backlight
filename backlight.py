@@ -7,7 +7,7 @@ provided they implement both files 'brightness' and 'max_brightness'
 in the respective folder.
 """
 from contextlib import suppress
-from datetime import datetime
+from datetime import datetime, time
 from json import load
 from os import listdir
 from os.path import isfile, join
@@ -73,6 +73,13 @@ def log(*msgs):
     print(*msgs, flush=True)
 
 
+def current_time():
+    """Returns the current time with hours and minutes only."""
+
+    now = datetime.now().time()
+    return time(hour=now.hour, minute=now.minute)
+
+
 def read_brightness(path):
     """Reads the raw brightness from the respective file."""
 
@@ -106,25 +113,25 @@ def load_config(path):
 def parse_config(config):
     """Parses the configuration dictionary."""
 
-    for timestamp, brightness in config.items():
+    for timestamp_string, brightness in config.items():
         try:
-            time = datetime.strptime(timestamp, TIME_FORMAT).time()
+            timestamp = datetime.strptime(timestamp_string, TIME_FORMAT).time()
         except ValueError:
-            error('Skipping invalid timestamp: {}.'.format(timestamp))
+            error('Skipping invalid timestamp: {}.'.format(timestamp_string))
         else:
-            yield (time, brightness)
+            yield (timestamp, brightness)
 
 
 def get_latest(config, now=None):
     """Returns the last config entry from the provided configuration."""
 
-    now = now or datetime.now().time()
+    now = now or current_time()
     sorted_values = sorted(config.items())
     latest = None
 
-    for time, brightness in sorted_values:
-        if time <= now:
-            latest = (time, brightness)
+    for timestamp, brightness in sorted_values:
+        if timestamp <= now:
+            latest = (timestamp, brightness)
         else:
             # Since values are sorted by timestamp,
             # stop seeking if timstamp is in the future.
@@ -273,14 +280,14 @@ class Daemon():
         log('Initial brightness is {}%.'.format(self._initial_brightness))
 
         try:
-            time, self.brightness = get_latest(self.config)
+            timestamp, self.brightness = get_latest(self.config)
         except NoLatestEntry:
             error('Latest entry could not be determined.')
             error('Falling back to 100%.')
             self.brightness = 100
         else:
             log('Loaded latest setting from {}.'.format(
-                time.strftime(TIME_FORMAT)))
+                timestamp.strftime(TIME_FORMAT)))
 
     def _shutdown(self):
         """Performs shutdown tasks."""
@@ -297,7 +304,7 @@ class Daemon():
 
         while True:
             with suppress(KeyError):
-                self.brightness = self.config[datetime.now().time()]
+                self.brightness = self.config[current_time()]
 
             try:
                 sleep(self.tick)
