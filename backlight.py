@@ -265,12 +265,13 @@ class Daemon():
     @brightness.setter
     def brightness(self, percent):
         """Sets the current brightness."""
-        try:
-            self.backlight.percent = self._current_brightness = percent
-        except ValueError:
-            error('Invalid brightness: {}.'.format(percent))
-        else:
-            log('Set brightness to {}%.'.format(percent))
+        if percent != self.brightness:
+            try:
+                self.backlight.percent = self._current_brightness = percent
+            except ValueError:
+                error('Invalid brightness: {}.'.format(percent))
+            else:
+                log('Set brightness to {}%.'.format(percent))
 
     def _startup(self):
         """Starts up the daemon."""
