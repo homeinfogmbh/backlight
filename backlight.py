@@ -244,7 +244,7 @@ class Daemon():
         self.reset = reset
         self.tick = tick
         self.backlight = Backlight()
-        self._initial_brightness = None
+        self._initial_brightness = self.backlight.percent
         self._current_brightness = None
 
     @property
@@ -258,20 +258,18 @@ class Daemon():
     @brightness.setter
     def brightness(self, percent):
         """Sets the current brightness."""
-        if percent != self._current_brightness:
-            try:
-                self._current_brightness = self.backlight.percent = percent
-            except ValueError:
-                error('Invalid brightness: {}.'.format(percent))
-            else:
-                log('Set brightness to {}%.'.format(percent))
+        try:
+            self.backlight.percent = self._current_brightness = percent
+        except ValueError:
+            error('Invalid brightness: {}.'.format(percent))
+        else:
+            log('Set brightness to {}%.'.format(percent))
 
     def _startup(self):
         """Starts up the daemon."""
         log('Starting up...')
         log('Tick is {} second(s).'.format(self.tick))
         log('Detected graphics card: {}.'.format(self.backlight.graphics_card))
-        self._initial_brightness = self.backlight.percent
         log('Initial brightness is {}%.'.format(self._initial_brightness))
 
         try:
@@ -287,8 +285,8 @@ class Daemon():
     def _shutdown(self):
         """Performs shutdown tasks."""
         if self.reset:
+            log('Resetting brightness...')
             self.brightness = self._initial_brightness
-            log('Reset brightness to {}%.'.format(self._initial_brightness))
 
         log('Terminating...')
         return True
