@@ -110,14 +110,20 @@ def get_latest_brightness(config, now=None):
     """Returns the last config entry from the provided configuration."""
 
     now = now or datetime.now().time()
-    latest = (None, None)
+    values = sorted((time, brightness) for time, brightness in config.items())
+    latest = None
 
-    for time, brightness in config.items():
+    for time, brightness in values:
         if time <= now:
-            if latest[0] is None or latest[0] < time:
+            if latest is None or latest[0] < time:
                 latest = (time, brightness)
+            else:
+                # Since values are sorted by timestamp,
+                # stop seeking if timstamp is in the future.
+                break
 
-    return latest[1]
+    # Fall back to latest value (of previous day)
+    return latest or values[-1]
 
 
 def backlightd():
@@ -255,7 +261,7 @@ class Daemon():
         log('Initial brightness is {}%.'.format(initial_brightness))
 
         while True:
-            brightness = get_latest_brightness(self.config)
+            _, brightness = get_latest_brightness(self.config)
 
             if brightness is not None:
                 self.brightness = brightness
