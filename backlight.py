@@ -144,10 +144,11 @@ class Backlight():
     """Backlight API handler."""
 
     def __init__(self, *graphics_cards):
-        """Tries the specified graphics cards until one is found.
+        """Tries the specified graphics cards until
+        a working one is found.
 
         If none are specified, tries all graphics cards within
-        BACKLIGHT_BASEDIR until one is found.
+        BACKLIGHT_BASEDIR until a working one is found.
         """
         if not graphics_cards:
             graphics_cards = listdir(BACKLIGHT_BASEDIR)
