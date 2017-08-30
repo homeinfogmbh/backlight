@@ -280,7 +280,7 @@ class Daemon():
             self.brightness = 100
         else:
             log('Loaded latest setting: {}% from {}.'.format(
-                self.brightness, time))
+                self.brightness, time.strftime(TIME_FORMAT)))
 
     def _shutdown(self):
         """Performs shutdown tasks."""
