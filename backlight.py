@@ -9,7 +9,7 @@ in the respective folder.
 from datetime import datetime
 from json import load
 from os import listdir
-from os.path import exists, join
+from os.path import isfile, join
 from sys import stderr
 from time import sleep
 
@@ -154,7 +154,7 @@ class Backlight():
             graphics_cards = listdir(BACKLIGHT_BASEDIR)
 
         for self.graphics_card in graphics_cards:
-            if all(exists(file) for file in self._files):
+            if all(isfile(file) for file in self._files):
                 break
         else:
             raise NoSupportedGraphicsCards() from None
