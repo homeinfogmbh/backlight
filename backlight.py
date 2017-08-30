@@ -279,8 +279,8 @@ class Daemon():
             error('Falling back to 100%.')
             self.brightness = 100
         else:
-            log('Loaded latest setting: {}% from {}.'.format(
-                self.brightness, time.strftime(TIME_FORMAT)))
+            log('Loaded latest setting from {}.'.format(
+                time.strftime(TIME_FORMAT)))
 
     def _shutdown(self):
         """Performs shutdown tasks."""
