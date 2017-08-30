@@ -110,10 +110,10 @@ def get_latest_brightness(config, now=None):
     """Returns the last config entry from the provided configuration."""
 
     now = now or datetime.now().time()
-    values = sorted((time, brightness) for time, brightness in config.items())
+    sorted_values = sorted(config.items())
     latest = None
 
-    for time, brightness in values:
+    for time, brightness in sorted_values:
         if time <= now:
             if latest is None or latest[0] < time:
                 latest = (time, brightness)
@@ -123,7 +123,7 @@ def get_latest_brightness(config, now=None):
                 break
 
     # Fall back to latest value (of previous day)
-    return latest or values[-1]
+    return latest or sorted_values[-1]
 
 
 def backlightd():
