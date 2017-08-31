@@ -31,9 +31,12 @@ __all__ = [
     'load_config',
     'parse_config',
     'get_latest',
+    'daemon',
+    'cli',
     'GraphicsCard',
     'Backlight',
-    'Daemon']
+    'Daemon',
+    'CLI']
 
 
 TIME_FORMAT = '%H:%M'
@@ -213,58 +216,23 @@ def daemon():
         return 1
 
 
-def cli_set_value(backlight, value, raw=False):
-    """Sets the respective backlight value."""
-
-    if raw:
-        try:
-            backlight.raw = value
-        except ValueError:
-            error('Invalid brightness: {}.'.format(value))
-            return 1
-        except PermissionError:
-            error('Cannot set brightness. Try running as root.')
-            return 4
-    else:
-        try:
-            value = int(value)
-        except ValueError:
-            error('Value must be an integer.')
-            return 2
-        else:
-            try:
-                backlight.percent = value
-            except ValueError:
-                error('Invalid percentage: {}.'.format(value))
-                return 1
-            except PermissionError:
-                error('Cannot set brightness. Try running as root.')
-                return 4
-
-
 def cli():
     """Runs as CLI program."""
 
     options = docopt(CLI_USAGE)
-    value = options['<value>']
-    graphics_cards = options['--graphics-cards']
-    raw = options['--raw']
 
     try:
-        backlight = get_backlight(graphics_cards)
+        cli_ = CLI(options['--graphics-cards'])
     except NoSupportedGraphicsCards:
         error('No supported graphics cards found.')
         return 3
     else:
-        if value:
-            return cli_set_value(backlight, value, raw=raw)
-        else:
-            if raw:
-                print(backlight.raw)
-            else:
-                print(backlight.percent)
+        value = options['<value>']
 
-    return 0
+        if value:
+            return cli_.set_brightness(value, raw=options['--raw'])
+
+        return cli_.print_brightness(raw=options['--raw'])
 
 
 class GraphicsCard():
@@ -438,3 +406,47 @@ class Daemon():
                 break
 
         return self._shutdown()
+
+
+class CLI():
+    """A command line interface handler."""
+
+    def __init__(self, graphics_cards):
+        """Sets the graphics cards."""
+        self._backlight = get_backlight(graphics_cards)
+
+    def print_brightness(self, raw=False):
+        """Returns the current backlight brightness."""
+        if raw:
+            print(self._backlight.raw)
+        else:
+            print(self._backlight.percent)
+
+        return 0
+
+    def set_brightness(self, value, raw=False):
+        """Seths the backlight brightness."""
+        if raw:
+            try:
+                self._backlight.raw = value
+            except ValueError:
+                error('Invalid brightness: {}.'.format(value))
+                return 1
+            except PermissionError:
+                error('Cannot set brightness. Try running as root.')
+                return 4
+        else:
+            try:
+                value = int(value)
+            except ValueError:
+                error('Value must be an integer.')
+                return 2
+            else:
+                try:
+                    self._backlight.percent = value
+                except ValueError:
+                    error('Invalid percentage: {}.'.format(value))
+                    return 1
+                except PermissionError:
+                    error('Cannot set brightness. Try running as root.')
+                    return 4
