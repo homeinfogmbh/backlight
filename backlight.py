@@ -16,8 +16,12 @@ from time import sleep
 try:
     from docopt import docopt
 except ImportError:
-    print('WARNING: "docopt" not installed. Daemon unavailable.',
-          file=stderr, flush=True)
+    def docopt(_):
+        """Docopt mockup to fail if invoked."""
+        exit(127)
+
+    print('WARNING: "docopt" not installed.', file=stderr, flush=True)
+    print('Daemon and CLI unavailable.', file=stderr, flush=True)
 
 
 __all__ = [
