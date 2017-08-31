@@ -229,7 +229,11 @@ def cli():
     else:
         if value:
             if raw:
-                backlight.raw = value
+                try:
+                    backlight.raw = value
+                except PermissionError:
+                    error('Cannot set brightness. Try running as root.')
+                    return 4
             else:
                 try:
                     value = int(value)
@@ -242,6 +246,9 @@ def cli():
                     except ValueError:
                         error('Invalid percentage: {}.'.format(value))
                         return 1
+                    except PermissionError:
+                        error('Cannot set brightness. Try running as root.')
+                        return 4
         else:
             if raw:
                 print(backlight.raw)
@@ -368,6 +375,8 @@ class Daemon():
             self._backlight.percent = percent
         except ValueError:
             error('Invalid brightness: {}.'.format(percent))
+        except PermissionError:
+            error('Cannot set brightness. Is this service running as root?')
         else:
             log('Set brightness to {}%.'.format(percent))
 
