@@ -32,7 +32,6 @@ __all__ = [
 TIME_FORMAT = '%H:%M'
 DEFAULT_CONFIG = '/etc/backlight.json'
 BACKLIGHT_BASEDIR = '/sys/class/backlight'
-LAST_MINUTE = time(hour=23, minute=59)
 DAEMON_USAGE = '''backlightd
 
 A screen backlight daemon.
@@ -78,17 +77,6 @@ def strip_time(timestamp):
     """Returns the time with hours and minutes only."""
 
     return time(hour=timestamp.hour, minute=timestamp.minute)
-
-
-def is_after(current, last):
-    """Determines whether the current time is after the last time."""
-
-    if last is None:
-        return True
-    elif current == last:
-        return False
-
-    return current > last or last == LAST_MINUTE
 
 
 def read_brightness(path):
@@ -313,7 +301,7 @@ class Daemon():
         while True:
             now = strip_time(datetime.now().time())
 
-            if is_after(now, self._last_timestamp):
+            if now != self._last_timestamp:
                 with suppress(KeyError):
                     self.brightness = self.config[now]
 
