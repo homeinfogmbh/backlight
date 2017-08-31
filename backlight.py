@@ -10,7 +10,7 @@ from contextlib import suppress
 from datetime import datetime, time
 from json import load
 from os import listdir
-from os.path import isfile, join
+from os.path import exists, isfile, join
 from sys import stderr
 from time import sleep
 
@@ -23,28 +23,42 @@ except ImportError:
 
 __all__ = [
     'DEFAULT_CONFIG',
-    'BACKLIGHT_BASEDIR',
+    'BASEDIR',
     'NoSupportedGraphicsCards',
-    'Backlight',
+    'GraphicsCard',
     'Daemon']
 
 
 TIME_FORMAT = '%H:%M'
 DEFAULT_CONFIG = '/etc/backlight.json'
-BACKLIGHT_BASEDIR = '/sys/class/backlight'
+BASEDIR = '/sys/class/backlight'
 DAEMON_USAGE = '''backlightd
 
 A screen backlight daemon.
 
 Usage:
-    backlightd [options]
+    backlightd [<graphics_card>...] [options]
 
 Options:
-    --config=<config_file>, -c  Sets the configuration file.
+    --config=<config_file>, -c  Sets the JSON configuration file.
     --tick=<seconds>, -t        Sets the daemon's interval [default: 1].
     --reset, -r                 Reset the brightness before terminating.
     --help                      Shows this page.
 '''
+
+
+class DoesNotExist(Exception):
+    """Indicates that the respective graphics card does not exist."""
+
+    pass
+
+
+class DoesNotSupportAPI(Exception):
+    """Indicates that the respective graphics
+    card does not implement this API.
+    """
+
+    pass
 
 
 class NoSupportedGraphicsCards(Exception):
@@ -150,12 +164,13 @@ def backlightd():
     """backlight daemon function."""
 
     options = docopt(DAEMON_USAGE)
+    graphics_cards = options['<graphics_card>']
     config_file = options['--config'] or DEFAULT_CONFIG
     tick = int(options['--tick'])
     reset = options['--reset']
 
     try:
-        daemon = Daemon(config_file, reset=reset, tick=tick)
+        daemon = Daemon(graphics_cards, config_file, reset=reset, tick=tick)
     except NoSupportedGraphicsCards:
         error('No supported graphics cards found.')
         return 3
@@ -166,66 +181,56 @@ def backlightd():
         return 1
 
 
-class Backlight():
-    """Backlight API handler."""
+class GraphicsCard():
+    """Graphics card API."""
 
-    def __init__(self, *graphics_cards):
-        """Tries the specified graphics cards until
-        a working one is found.
+    def __init__(self, name):
+        """Sets the graphics card's name."""
+        self.name = name
 
-        If none are specified, tries all graphics cards within
-        BACKLIGHT_BASEDIR until a working one is found.
+        if not exists(self.device_path):
+            raise DoesNotExist()
+
+        if not all(isfile(file) for file in self.files):
+            raise DoesNotSupportAPI()
+
+    @property
+    def device_path(self):
+        """Returns the absolute path to the
+        graphics card's device folder.
         """
-        if not graphics_cards:
-            graphics_cards = listdir(BACKLIGHT_BASEDIR)
-
-        for self.graphics_card in graphics_cards:
-            if all(isfile(file) for file in self._files):
-                break
-        else:
-            raise NoSupportedGraphicsCards() from None
-
-        self._max_brightness = None
+        return join(BASEDIR, self.name)
 
     @property
-    def _device_path(self):
-        """Returns the absolute path to the graphics card."""
-        return join(BACKLIGHT_BASEDIR, self.graphics_card)
-
-    @property
-    def _max_brightness_file(self):
+    def max_brightness_file(self):
         """Returns the path of the maximum brightness file."""
-        return join(self._device_path, 'max_brightness')
+        return join(self.device_path, 'max_brightness')
 
     @property
-    def _brightness_file(self):
+    def brightness_file(self):
         """Returns the path of the backlight file."""
-        return join(self._device_path, 'brightness')
+        return join(self.device_path, 'brightness')
 
     @property
-    def _files(self):
-        """Yields files of the graphics cards API."""
-        yield self._max_brightness_file
-        yield self._brightness_file
+    def files(self):
+        """Yields the graphics cards API's files."""
+        yield self.max_brightness_file
+        yield self.brightness_file
 
     @property
     def max_brightness(self):
         """Returns the raw maximum brightness."""
-        if self._max_brightness is None:
-            self._max_brightness = int(read_brightness(
-                self._max_brightness_file))
-
-        return self._max_brightness
+        return int(read_brightness(self.max_brightness_file))
 
     @property
     def brightness(self):
         """Returns the brightness' absolute value."""
-        return int(read_brightness(self._brightness_file))
+        return int(read_brightness(self.brightness_file))
 
     @brightness.setter
     def brightness(self, brightness):
         """Sets the brightness' absolute value."""
-        write_brightness(self._brightness_file, brightness)
+        write_brightness(self.brightness_file, brightness)
 
     @property
     def percent(self):
@@ -244,25 +249,46 @@ class Backlight():
 class Daemon():
     """Backlight daemon."""
 
-    def __init__(self, config_file, reset=False, tick=1):
-        """Sets configuration file, reset flag and tick interval."""
+    def __init__(self, graphics_cards, config_file, reset=False, tick=1):
+        """Tries the specified graphics cards until
+        a working one is found.
+
+        If none are specified, tries all graphics cards
+        within BASEDIR until a working one is found.
+        """
+        if not graphics_cards:
+            graphics_cards = listdir(BASEDIR)
+
+        for graphics_card in graphics_cards:
+            try:
+                self.graphics_card = GraphicsCard(graphics_card)
+            except DoesNotExist:
+                error('Graphics card "{}" does not exist.'.format(
+                    graphics_card))
+            except DoesNotSupportAPI:
+                error('Graphics card "{}" does not support API.'.format(
+                    graphics_card))
+            else:
+                break
+        else:
+            raise NoSupportedGraphicsCards() from None
+
         self.config = dict(parse_config(load_config(config_file)))
         self.reset = reset
         self.tick = tick
-        self.backlight = Backlight()
-        self._initial_brightness = self.backlight.percent
+        self._initial_brightness = self.graphics_card.percent
         self._last_timestamp = None
 
     @property
     def brightness(self):
         """Returns the current brightness."""
-        return self.backlight.percent
+        return self.graphics_card.percent
 
     @brightness.setter
     def brightness(self, percent):
         """Sets the current brightness."""
         try:
-            self.backlight.percent = percent
+            self.graphics_card.percent = percent
         except ValueError:
             error('Invalid brightness: {}.'.format(percent))
         else:
@@ -272,7 +298,7 @@ class Daemon():
         """Starts up the daemon."""
         log('Starting up...')
         log('Tick is {} second(s).'.format(self.tick))
-        log('Detected graphics card: {}.'.format(self.backlight.graphics_card))
+        log('Detected graphics card: {}.'.format(self.graphics_card.name))
         log('Initial brightness is {}%.'.format(self._initial_brightness))
 
         try:
