@@ -10,7 +10,7 @@ from contextlib import suppress
 from datetime import datetime, time
 from json import load
 from os import listdir
-from os.path import exists, isfile, join
+from os.path import basename, exists, isfile, join
 from sys import stderr
 from time import sleep
 
@@ -52,6 +52,18 @@ Options:
     --tick=<seconds>, -t        Sets the daemon's interval [default: 1].
     --reset, -r                 Reset the brightness before terminating.
     --help                      Shows this page.
+'''
+CLI_USAGE = '''backlight
+
+A screen backlight daemon.
+
+Usage:
+    backlight [<value>] [options]
+
+Options:
+    --graphics-cards=<graphics_card>...     Sets the desired graphics cards.
+    --raw                                   Get / set raw brightness.
+    --help                                  Shows this page.
 '''
 
 
@@ -99,6 +111,19 @@ def strip_time(timestamp):
     """Returns the time with hours and minutes only."""
 
     return time(hour=timestamp.hour, minute=timestamp.minute)
+
+
+def get_backlight(graphics_cards):
+    """Gets the backlight for the first supporting graphics card."""
+
+    if not graphics_cards:
+        graphics_cards = listdir(BASEDIR)
+
+    for graphics_card in graphics_cards:
+        with suppress(DoesNotExist, DoesNotSupportAPI):
+            return GraphicsCard(graphics_card).backlight
+
+    raise NoSupportedGraphicsCards() from None
 
 
 def read_brightness(path):
@@ -168,8 +193,8 @@ def get_latest(config):
     return latest
 
 
-def backlightd():
-    """backlight daemon function."""
+def daemon():
+    """Runs as a daemon."""
 
     options = docopt(DAEMON_USAGE)
     graphics_cards = options['<graphics_card>']
@@ -178,15 +203,53 @@ def backlightd():
     reset = options['--reset']
 
     try:
-        daemon = Daemon(graphics_cards, config_file, reset=reset, tick=tick)
+        daemon_ = Daemon(graphics_cards, config_file, reset=reset, tick=tick)
     except NoSupportedGraphicsCards:
         error('No supported graphics cards found.')
         return 3
     else:
-        if daemon.run():
+        if daemon_.run():
             return 0
 
         return 1
+
+
+def cli():
+    """Runs as CLI program."""
+
+    options = docopt(CLI_USAGE)
+    value = options['<value>']
+    graphics_cards = options['--graphics-cards']
+    raw = options['--raw']
+
+    try:
+        backlight = get_backlight(graphics_cards)
+    except NoSupportedGraphicsCards:
+        error('No supported graphics cards found.')
+        return 3
+    else:
+        if value:
+            if raw:
+                backlight.raw = value
+            else:
+                try:
+                    value = int(value)
+                except ValueError:
+                    error('Value must be an integer.')
+                    return 2
+                else:
+                    try:
+                        backlight.percent = value
+                    except ValueError:
+                        error('Invalid percentage: {}.'.format(value))
+                        return 1
+        else:
+            if raw:
+                print(backlight.raw)
+            else:
+                print(backlight.percent)
+
+    return 0
 
 
 class GraphicsCard():
@@ -287,26 +350,7 @@ class Daemon():
         If none are specified, tries all graphics cards
         within BASEDIR until a working one is found.
         """
-        if not graphics_cards:
-            graphics_cards = listdir(BASEDIR)
-
-        for graphics_card in graphics_cards:
-            try:
-                graphics_card = GraphicsCard(graphics_card)
-            except DoesNotExist:
-                error('Graphics card "{}" does not exist.'.format(
-                    graphics_card))
-            else:
-                try:
-                    self._backlight = graphics_card.backlight
-                except DoesNotSupportAPI:
-                    error('Graphics card "{}" does not support '
-                          'baecklight API.'.format(graphics_card))
-                else:
-                    break
-        else:
-            raise NoSupportedGraphicsCards() from None
-
+        self._backlight = get_backlight(graphics_cards)
         self.config = dict(parse_config(load_config(config_file)))
         self.reset = reset
         self.tick = tick
@@ -377,4 +421,9 @@ class Daemon():
 
 
 if __name__ == '__main__':
-    exit(backlightd())
+    BASENAME = basename(__file__)
+
+    if BASENAME == 'backlightd':
+        exit(daemon())
+    elif BASENAME == 'backlight':
+        exit(cli())
