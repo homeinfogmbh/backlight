@@ -429,7 +429,7 @@ Options:
                 error('Cannot set brightness. Try running as root.')
                 return 4
             except OSError:
-                raise ValueError('Invalid brightness: {}.'.format(value))
+                error('Invalid brightness: {}.'.format(value))
         else:
             try:
                 value = int(value)
