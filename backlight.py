@@ -234,10 +234,7 @@ class Backlight():
     @raw.setter
     def raw(self, brightness):
         """Sets the raw brightness."""
-        try:
-            write_brightness(self._value_file, brightness)
-        except OSError:
-            raise ValueError('Invalid brightness: {}.'.format(brightness))
+        write_brightness(self._value_file, brightness)
 
     @property
     def value(self):
@@ -428,12 +425,11 @@ Options:
         if raw:
             try:
                 self._backlight.raw = value
-            except ValueError:
-                error('Invalid brightness: {}.'.format(value))
-                return 1
             except PermissionError:
                 error('Cannot set brightness. Try running as root.')
                 return 4
+            except OSError:
+                raise ValueError('Invalid brightness: {}.'.format(value))
         else:
             try:
                 value = int(value)
