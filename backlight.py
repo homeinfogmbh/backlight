@@ -384,9 +384,9 @@ Usage:
     backlight [<value>] [options]
 
 Options:
-    --graphics-cards=<graphics_card>...     Sets the desired graphics cards.
-    --raw                                   Get / set raw brightness.
-    --help                                  Shows this page.
+    --graphics-card=<graphics_card>     Sets the desired graphics card.
+    --raw                               Get / set raw brightness.
+    --help                              Shows this page.
 """
 
     def __init__(self, graphics_cards):
@@ -399,7 +399,7 @@ Options:
         options = docopt(cls.__doc__)
 
         try:
-            cli = CLI(options['--graphics-cards'])
+            cli = CLI([options['--graphics-card']])
         except NoSupportedGraphicsCards:
             error('No supported graphics cards found.')
             return 3
