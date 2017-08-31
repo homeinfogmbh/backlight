@@ -112,13 +112,6 @@ def read_brightness(path):
         return file.read().strip()
 
 
-def write_brightness(path, brightness):
-    """Reads the raw brightness from the respective file."""
-
-    with open(path, 'w') as file:
-        return file.write('{}\n'.format(brightness))
-
-
 def load_config(path):
     """Loads the configuration"""
 
@@ -211,15 +204,21 @@ class Backlight():
         return join(self.graphics_card.path, 'max_brightness')
 
     @property
-    def _value_file(self):
+    def _setter_file(self):
         """Returns the path of the backlight file."""
         return join(self.graphics_card.path, 'brightness')
+
+    @property
+    def _getter_file(self):
+        """Returns the file to read the current brightness from."""
+        return join(self.graphics_card.path, 'actual_brightness')
 
     @property
     def _files(self):
         """Yields the graphics cards API's files."""
         yield self._max_file
-        yield self._value_file
+        yield self._setter_file
+        yield self._getter_file
 
     @property
     def max(self):
@@ -229,12 +228,13 @@ class Backlight():
     @property
     def raw(self):
         """Returns the raw brightness."""
-        return read_brightness(self._value_file)
+        return read_brightness(self._getter_file)
 
     @raw.setter
     def raw(self, brightness):
         """Sets the raw brightness."""
-        write_brightness(self._value_file, brightness)
+        with open(self._setter_file, 'w') as file:
+            return file.write('{}\n'.format(brightness))
 
     @property
     def value(self):
