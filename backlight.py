@@ -6,6 +6,7 @@ of graphics cards unter '/sys/class/backlight/<graphics_card>/',
 provided they implement both files 'brightness' and 'max_brightness'
 in the respective folder.
 """
+from contextlib import suppress
 from datetime import datetime, time
 from json import load
 from os import listdir
@@ -250,22 +251,26 @@ class Daemon():
         self.tick = tick
         self.backlight = Backlight()
         self._initial_brightness = self.backlight.percent
-        self._last_timestamp = None
+        self._current_brightness = None
 
     @property
     def brightness(self):
         """Returns the current brightness."""
-        return self.backlight.percent
+        if self._current_brightness is None:
+            self._current_brightness = self.backlight.percent
+
+        return self._current_brightness
 
     @brightness.setter
     def brightness(self, percent):
         """Sets the current brightness."""
-        try:
-            self.backlight.percent = percent
-        except ValueError:
-            error('Invalid brightness: {}.'.format(percent))
-        else:
-            log('Set brightness to {}%.'.format(percent))
+        if percent != self._current_brightness:
+            try:
+                self.backlight.percent = self._current_brightness = percent
+            except ValueError:
+                error('Invalid brightness: {}.'.format(percent))
+            else:
+                log('Set brightness to {}%.'.format(percent))
 
     def _startup(self):
         """Starts up the daemon."""
@@ -298,15 +303,9 @@ class Daemon():
         self._startup()
 
         while True:
-            now = strip_time(datetime.now().time())
-
-            if self._last_timestamp is None or self._last_timestamp < now:
-                try:
-                    self.brightness = self.config[now]
-                except KeyError:
-                    pass
-                else:
-                    self._last_timestamp = now
+            with suppress(KeyError):
+                self.brightness = self.config[
+                    strip_time(datetime.now().time())]
 
             try:
                 sleep(self.tick)
