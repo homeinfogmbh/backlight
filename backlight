@@ -1,0 +1,8 @@
+#! /usr/bin/env python3
+"""Runs the backlight CLI."""
+
+from backlight import cli
+
+
+if __name__ == '__main__':
+    cli()

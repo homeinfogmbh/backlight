@@ -1,4 +1,3 @@
-#! /usr/bin/env python3
 """A linux screen backlight API and daemon.
 
 This module supports getting and setting of the backlight brightness
@@ -10,7 +9,7 @@ from contextlib import suppress
 from datetime import datetime, time
 from json import load
 from os import listdir
-from os.path import basename, exists, isfile, join
+from os.path import exists, isfile, join
 from sys import stderr
 from time import sleep
 
@@ -418,12 +417,3 @@ class Daemon():
                 break
 
         return self._shutdown()
-
-
-if __name__ == '__main__':
-    BASENAME = basename(__file__)
-
-    if BASENAME == 'backlightd':
-        exit(daemon())
-    elif BASENAME == 'backlight':
-        exit(cli())
