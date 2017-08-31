@@ -1,8 +1,8 @@
 #! /usr/bin/env python3
 """Runs the backlight daemon."""
 
-from backlight import daemon
+from backlight import Daemon
 
 
 if __name__ == '__main__':
-    daemon()
+    Daemon.run()

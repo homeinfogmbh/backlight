@@ -31,8 +31,6 @@ __all__ = [
     'load_config',
     'parse_config',
     'get_latest',
-    'daemon',
-    'cli',
     'GraphicsCard',
     'Backlight',
     'Daemon',
@@ -42,31 +40,6 @@ __all__ = [
 TIME_FORMAT = '%H:%M'
 DEFAULT_CONFIG = '/etc/backlight.json'
 BASEDIR = '/sys/class/backlight'
-DAEMON_USAGE = '''backlightd
-
-A screen backlight daemon.
-
-Usage:
-    backlightd [<graphics_card>...] [options]
-
-Options:
-    --config=<config_file>, -c  Sets the JSON configuration file.
-    --tick=<seconds>, -t        Sets the daemon's interval [default: 1].
-    --reset, -r                 Reset the brightness before terminating.
-    --help                      Shows this page.
-'''
-CLI_USAGE = '''backlight
-
-A screen backlight daemon.
-
-Usage:
-    backlight [<value>] [options]
-
-Options:
-    --graphics-cards=<graphics_card>...     Sets the desired graphics cards.
-    --raw                                   Get / set raw brightness.
-    --help                                  Shows this page.
-'''
 
 
 class DoesNotExist(Exception):
@@ -195,46 +168,6 @@ def get_latest(config):
     return latest
 
 
-def daemon():
-    """Runs as a daemon."""
-
-    options = docopt(DAEMON_USAGE)
-    graphics_cards = options['<graphics_card>']
-    config_file = options['--config'] or DEFAULT_CONFIG
-    tick = int(options['--tick'])
-    reset = options['--reset']
-
-    try:
-        daemon_ = Daemon(graphics_cards, config_file, reset=reset, tick=tick)
-    except NoSupportedGraphicsCards:
-        error('No supported graphics cards found.')
-        return 3
-    else:
-        if daemon_.run():
-            return 0
-
-        return 1
-
-
-def cli():
-    """Runs as CLI program."""
-
-    options = docopt(CLI_USAGE)
-
-    try:
-        cli_ = CLI(options['--graphics-cards'])
-    except NoSupportedGraphicsCards:
-        error('No supported graphics cards found.')
-        return 3
-    else:
-        value = options['<value>']
-
-        if value:
-            return cli_.set_brightness(value, raw=options['--raw'])
-
-        return cli_.print_brightness(raw=options['--raw'])
-
-
 class GraphicsCard():
     """Graphics card API."""
 
@@ -327,7 +260,19 @@ class Backlight():
 
 
 class Daemon():
-    """Backlight daemon."""
+    """backlightd
+
+A screen backlight daemon.
+
+Usage:
+    backlightd [<graphics_card>...] [options]
+
+Options:
+    --config=<config_file>, -c  Sets the JSON configuration file.
+    --tick=<seconds>, -t        Sets the daemon's interval [default: 1].
+    --reset, -r                 Reset the brightness before terminating.
+    --help                      Shows this page.
+"""
 
     def __init__(self, graphics_cards, config_file, reset=False, tick=1):
         """Tries the specified graphics cards until
@@ -342,6 +287,27 @@ class Daemon():
         self.tick = tick
         self._initial_brightness = self._backlight.percent
         self._last_timestamp = None
+
+    @classmethod
+    def run(cls):
+        """Runs as a daemon."""
+        options = docopt(cls.__doc__)
+        graphics_cards = options['<graphics_card>']
+        config_file = options['--config'] or DEFAULT_CONFIG
+        tick = int(options['--tick'])
+        reset = options['--reset']
+
+        try:
+            daemon = Daemon(
+                graphics_cards, config_file, reset=reset, tick=tick)
+        except NoSupportedGraphicsCards:
+            error('No supported graphics cards found.')
+            return 3
+        else:
+            if daemon.spawn():
+                return 0
+
+            return 1
 
     @property
     def brightness(self):
@@ -387,8 +353,8 @@ class Daemon():
         log('Terminating...')
         return True
 
-    def run(self):
-        """Runs the daemon."""
+    def spawn(self):
+        """Spawns the daemon."""
         self._startup()
 
         while True:
@@ -409,11 +375,40 @@ class Daemon():
 
 
 class CLI():
-    """A command line interface handler."""
+    """backlight
+
+A screen backlight CLI interface.
+
+Usage:
+    backlight [<value>] [options]
+
+Options:
+    --graphics-cards=<graphics_card>...     Sets the desired graphics cards.
+    --raw                                   Get / set raw brightness.
+    --help                                  Shows this page.
+"""
 
     def __init__(self, graphics_cards):
         """Sets the graphics cards."""
         self._backlight = get_backlight(graphics_cards)
+
+    @classmethod
+    def run(cls):
+        """Runs as CLI program."""
+        options = docopt(cls.__doc__)
+
+        try:
+            cli = CLI(options['--graphics-cards'])
+        except NoSupportedGraphicsCards:
+            error('No supported graphics cards found.')
+            return 3
+        else:
+            value = options['<value>']
+
+            if value:
+                return cli.set_brightness(value, raw=options['--raw'])
+
+            return cli.print_brightness(raw=options['--raw'])
 
     def print_brightness(self, raw=False):
         """Returns the current backlight brightness."""
