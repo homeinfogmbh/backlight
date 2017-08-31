@@ -213,6 +213,35 @@ def daemon():
         return 1
 
 
+def cli_set_value(backlight, value, raw=False):
+    """Sets the respective backlight value."""
+
+    if raw:
+        try:
+            backlight.raw = value
+        except ValueError:
+            error('Invalid brightness: {}.'.format(value))
+            return 1
+        except PermissionError:
+            error('Cannot set brightness. Try running as root.')
+            return 4
+    else:
+        try:
+            value = int(value)
+        except ValueError:
+            error('Value must be an integer.')
+            return 2
+        else:
+            try:
+                backlight.percent = value
+            except ValueError:
+                error('Invalid percentage: {}.'.format(value))
+                return 1
+            except PermissionError:
+                error('Cannot set brightness. Try running as root.')
+                return 4
+
+
 def cli():
     """Runs as CLI program."""
 
@@ -228,27 +257,7 @@ def cli():
         return 3
     else:
         if value:
-            if raw:
-                try:
-                    backlight.raw = value
-                except PermissionError:
-                    error('Cannot set brightness. Try running as root.')
-                    return 4
-            else:
-                try:
-                    value = int(value)
-                except ValueError:
-                    error('Value must be an integer.')
-                    return 2
-                else:
-                    try:
-                        backlight.percent = value
-                    except ValueError:
-                        error('Invalid percentage: {}.'.format(value))
-                        return 1
-                    except PermissionError:
-                        error('Cannot set brightness. Try running as root.')
-                        return 4
+            return cli_set_value(backlight, value, raw=raw)
         else:
             if raw:
                 print(backlight.raw)
@@ -320,7 +329,10 @@ class Backlight():
     @raw.setter
     def raw(self, brightness):
         """Sets the raw brightness."""
-        write_brightness(self._value_file, brightness)
+        try:
+            write_brightness(self._value_file, brightness)
+        except OSError:
+            raise ValueError('Invalid brightness: {}.'.format(brightness))
 
     @property
     def value(self):
