@@ -32,6 +32,7 @@ __all__ = [
 TIME_FORMAT = '%H:%M'
 DEFAULT_CONFIG = '/etc/backlight.json'
 BACKLIGHT_BASEDIR = '/sys/class/backlight'
+LAST_MINUTE = time(hour=23, minute=59)
 DAEMON_USAGE = '''backlightd
 
 A screen backlight daemon.
@@ -77,6 +78,17 @@ def strip_time(timestamp):
     """Returns the time with hours and minutes only."""
 
     return time(hour=timestamp.hour, minute=timestamp.minute)
+
+
+def is_after(current, last):
+    """Determines whether the current time is after the last time."""
+
+    if last is None:
+        return True
+    elif current == last:
+        return False
+
+    return current > last or last == LAST_MINUTE
 
 
 def read_brightness(path):
@@ -251,26 +263,22 @@ class Daemon():
         self.tick = tick
         self.backlight = Backlight()
         self._initial_brightness = self.backlight.percent
-        self._current_brightness = None
+        self._last_timestamp = None
 
     @property
     def brightness(self):
         """Returns the current brightness."""
-        if self._current_brightness is None:
-            self._current_brightness = self.backlight.percent
-
-        return self._current_brightness
+        return self.backlight.percent
 
     @brightness.setter
     def brightness(self, percent):
         """Sets the current brightness."""
-        if percent != self._current_brightness:
-            try:
-                self.backlight.percent = self._current_brightness = percent
-            except ValueError:
-                error('Invalid brightness: {}.'.format(percent))
-            else:
-                log('Set brightness to {}%.'.format(percent))
+        try:
+            self.backlight.percent = percent
+        except ValueError:
+            error('Invalid brightness: {}.'.format(percent))
+        else:
+            log('Set brightness to {}%.'.format(percent))
 
     def _startup(self):
         """Starts up the daemon."""
@@ -280,14 +288,14 @@ class Daemon():
         log('Initial brightness is {}%.'.format(self._initial_brightness))
 
         try:
-            timestamp, self.brightness = get_latest(self.config)
+            self._last_timestamp, self.brightness = get_latest(self.config)
         except NoLatestEntry:
             error('Latest entry could not be determined.')
             error('Falling back to 100%.')
             self.brightness = 100
         else:
             log('Loaded latest setting from {}.'.format(
-                timestamp.strftime(TIME_FORMAT)))
+                self._last_timestamp.strftime(TIME_FORMAT)))
 
     def _shutdown(self):
         """Performs shutdown tasks."""
@@ -303,9 +311,13 @@ class Daemon():
         self._startup()
 
         while True:
-            with suppress(KeyError):
-                self.brightness = self.config[
-                    strip_time(datetime.now().time())]
+            now = strip_time(datetime.now().time())
+
+            if is_after(now, self._last_timestamp):
+                with suppress(KeyError):
+                    self.brightness = self.config[now]
+
+                self._last_timestamp = now
 
             try:
                 sleep(self.tick)
