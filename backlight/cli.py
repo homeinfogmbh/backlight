@@ -30,9 +30,21 @@ except ImportError:
         print('Daemon and CLI unavailable.', file=sys.stderr, flush=True)
         sys.exit(5)
 
-from backlight.api import NoSupportedGraphicsCards, error, Backlight
+from backlight.api import NoSupportedGraphicsCards, Backlight
 
-__all__ = ['CLI']
+__all__ = ['error', 'log', 'CLI']
+
+
+def error(*msgs):
+    """Logs error messages."""
+
+    print(*msgs, file=sys.stderr, flush=True)
+
+
+def log(*msgs):
+    """Logs informational messages."""
+
+    print(*msgs, flush=True)
 
 
 class CLI():

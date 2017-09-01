@@ -22,14 +22,14 @@ and 'max_brightness' in the respective folder.
 from contextlib import suppress
 from os import listdir
 from os.path import exists, isfile, join
-from sys import stderr
 
 
 __all__ = [
     'BASEDIR',
     'DoesNotExist',
     'DoesNotSupportAPI',
-    'NoSupportedGraphicsCards']
+    'NoSupportedGraphicsCards',
+    'Backlight']
 
 
 BASEDIR = '/sys/class/backlight'
@@ -53,18 +53,6 @@ class NoSupportedGraphicsCards(Exception):
     """Indicates that the available graphics cards are not supported."""
 
     pass
-
-
-def error(*msgs):
-    """Logs error messages."""
-
-    print(*msgs, file=stderr, flush=True)
-
-
-def log(*msgs):
-    """Logs informational messages."""
-
-    print(*msgs, flush=True)
 
 
 class Backlight():

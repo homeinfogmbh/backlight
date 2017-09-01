@@ -24,8 +24,8 @@ from datetime import datetime
 from json import load
 from time import sleep
 
-from backlight.api import NoSupportedGraphicsCards, error, log, Backlight
-from backlight.cli import docopt
+from backlight.api import NoSupportedGraphicsCards, Backlight
+from backlight.cli import docopt, error, log
 
 
 __all__ = [
