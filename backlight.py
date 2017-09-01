@@ -34,7 +34,6 @@ __all__ = [
     'load_config',
     'parse_config',
     'get_latest',
-    'GraphicsCard',
     'Backlight',
     'Daemon',
     'CLI']
@@ -92,19 +91,6 @@ def stripped_datetime(date_time=None):
     return datetime(
         year=date_time.year, month=date_time.month, day=date_time.day,
         hour=date_time.hour, minute=date_time.minute)
-
-
-def get_backlight(graphics_cards):
-    """Gets the backlight for the first supporting graphics card."""
-
-    if not graphics_cards:
-        graphics_cards = listdir(BASEDIR)
-
-    for graphics_card in graphics_cards:
-        with suppress(DoesNotExist, DoesNotSupportAPI):
-            return GraphicsCard(graphics_card).backlight
-
-    raise NoSupportedGraphicsCards() from None
 
 
 def load_config(path):
@@ -170,53 +156,47 @@ def get_latest(config):
     return latest
 
 
-class GraphicsCard():
-    """Graphics card API."""
-
-    def __init__(self, name):
-        """Sets the graphics card's name."""
-        self.name = name
-
-        if not exists(self.path):
-            raise DoesNotExist()
-
-    @property
-    def path(self):
-        """Returns the absolute path to the
-        graphics card's device folder.
-        """
-        return join(BASEDIR, self.name)
-
-    @property
-    def backlight(self):
-        """Returns the respective backlight handler."""
-        return Backlight(self)
-
-
 class Backlight():
     """Backlight handler for graphics cards."""
 
     def __init__(self, graphics_card):
         """Sets the respective graphics card."""
-        self.graphics_card = graphics_card
+        self._graphics_card = graphics_card
+        self._validate()
 
-        if not all(isfile(file) for file in self._files):
-            raise DoesNotSupportAPI()
+    @classmethod
+    def load(cls, graphics_cards=None):
+        """Loads the backlight from the respective graphics cards."""
+        if not graphics_cards:
+            graphics_cards = listdir(BASEDIR)
+
+        for graphics_card in graphics_cards:
+            with suppress(DoesNotExist, DoesNotSupportAPI):
+                return cls(graphics_card)
+
+        raise NoSupportedGraphicsCards() from None
+
+    @property
+    def _path(self):
+        """Returns the absolute path to the
+        graphics card's device folder.
+        """
+        return join(BASEDIR, self._graphics_card)
 
     @property
     def _max_file(self):
         """Returns the path of the maximum brightness file."""
-        return join(self.graphics_card.path, 'max_brightness')
+        return join(self._path, 'max_brightness')
 
     @property
     def _setter_file(self):
         """Returns the path of the backlight file."""
-        return join(self.graphics_card.path, 'brightness')
+        return join(self._path, 'brightness')
 
     @property
     def _getter_file(self):
         """Returns the file to read the current brightness from."""
-        return join(self.graphics_card.path, 'actual_brightness')
+        return join(self._path, 'actual_brightness')
 
     @property
     def _files(self):
@@ -224,6 +204,29 @@ class Backlight():
         yield self._max_file
         yield self._setter_file
         yield self._getter_file
+
+    def _validate(self):
+        """Determines whether all files are present."""
+        if not exists(self._path):
+            raise DoesNotExist()
+
+        if not all(isfile(file) for file in self._files):
+            raise DoesNotSupportAPI()
+
+    @property
+    def graphics_card(self):
+        """Returns the configured graphics card."""
+        return self._graphics_card
+
+    @graphics_card.setter
+    def graphics_card(self, graphics_card):
+        """Sets the graphics card."""
+        self._graphics_card, previous = graphics_card, self._graphics_card
+
+        try:
+            self._validate()
+        finally:
+            self._graphics_card = previous
 
     @property
     def max(self):
@@ -289,7 +292,7 @@ Options:
         If none are specified, tries all graphics cards
         within BASEDIR until a working one is found.
         """
-        self._backlight = get_backlight(graphics_cards)
+        self._backlight = Backlight.load(graphics_cards)
         self.config = dict(parse_config(load_config(config_file)))
         self.reset = reset
         self.tick = tick
@@ -398,7 +401,7 @@ Options:
 
     def __init__(self, graphics_cards):
         """Sets the graphics cards."""
-        self._backlight = get_backlight(graphics_cards)
+        self._backlight = Backlight.load(graphics_cards)
 
     @classmethod
     def run(cls):
