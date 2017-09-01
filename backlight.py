@@ -162,7 +162,16 @@ class Backlight():
     def __init__(self, graphics_card):
         """Sets the respective graphics card."""
         self._graphics_card = graphics_card
-        self._validate()
+
+        if not exists(self._path):
+            raise DoesNotExist()
+
+        if not all(isfile(file) for file in self._files):
+            raise DoesNotSupportAPI()
+
+    def __str__(self):
+        """Returns the respective graphics card's name."""
+        return self._graphics_card
 
     @classmethod
     def load(cls, graphics_cards=None):
@@ -209,29 +218,6 @@ class Backlight():
         yield self._max_file
         yield self._setter_file
         yield self._getter_file
-
-    def _validate(self):
-        """Determines whether all files are present."""
-        if not exists(self._path):
-            raise DoesNotExist()
-
-        if not all(isfile(file) for file in self._files):
-            raise DoesNotSupportAPI()
-
-    @property
-    def graphics_card(self):
-        """Returns the configured graphics card."""
-        return self._graphics_card
-
-    @graphics_card.setter
-    def graphics_card(self, graphics_card):
-        """Sets the graphics card."""
-        self._graphics_card, previous = graphics_card, self._graphics_card
-
-        try:
-            self._validate()
-        finally:
-            self._graphics_card = previous
 
     @property
     def max(self):
@@ -346,8 +332,7 @@ Options:
         """Starts up the daemon."""
         log('Starting up...')
         log('Tick is {} second(s).'.format(self.tick))
-        log('Detected graphics card: {}.'.format(
-            self._backlight.graphics_card.name))
+        log('Detected graphics card: {}.'.format(self._backlight))
         log('Initial brightness is {}%.'.format(self._initial_brightness))
 
         try:
