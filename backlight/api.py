@@ -120,7 +120,7 @@ class Backlight():
 
     @property
     def max(self):
-        """Returns the raw maximum brightness."""
+        """Returns the maximum brightness as integer."""
         with open(self._max_file, 'r') as file:
             return int(file.read().strip())
 
@@ -143,7 +143,7 @@ class Backlight():
 
     @value.setter
     def value(self, brightness):
-        """Sets the raw brightness."""
+        """Sets the raw brightness from an integer."""
         self.raw = str(brightness)
 
     @property
