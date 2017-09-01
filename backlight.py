@@ -429,6 +429,7 @@ Options:
                 return 4
             except OSError:
                 error('Invalid brightness: {}.'.format(value))
+                return 1
         else:
             try:
                 value = int(value)
