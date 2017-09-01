@@ -12,12 +12,13 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with pydialog.  If not, see <http://www.gnu.org/licenses/>.
-"""A linux screen backlight API and daemon.
+"""This module provides an API to retrieve and set the backlight
+brightness of screens."
 
-This module supports getting and setting of the backlight brightness
-of graphics cards unter '/sys/class/backlight/<graphics_card>/',
-provided they implement the files 'brightness', 'actual_brightness'
-and 'max_brightness' in the respective folder.
+Therefor it reads information from device files in
+'/sys/class/backlight/<graphics_card>/', provided they implement
+the files 'brightness', 'actual_brightness' and 'max_brightness'
+in the respective folder.
 """
 from contextlib import suppress
 from os import listdir

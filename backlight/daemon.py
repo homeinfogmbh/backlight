@@ -12,12 +12,8 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with backlight.  If not, see <http://www.gnu.org/licenses/>.
-"""A linux screen backlight API and daemon.
-
-This module supports getting and setting of the backlight brightness
-of graphics cards unter '/sys/class/backlight/<graphics_card>/',
-provided they implement the files 'brightness', 'actual_brightness'
-and 'max_brightness' in the respective folder.
+"""A daemon to update the screen's backlight brightness
+at given timestamps to the respective value.
 """
 import sys
 from contextlib import suppress
