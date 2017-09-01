@@ -132,7 +132,17 @@ def parse_config(config):
         except ValueError:
             error('Skipping invalid timestamp: {}.'.format(timestamp))
         else:
-            yield (timestamp, brightness)
+            try:
+                brightness = int(brightness)
+            except (TypeError, ValueError):
+                error('Skipping invalid brightness: "{}" at {}.'.format(
+                    brightness, timestamp.strftime(TIME_FORMAT)))
+            else:
+                if 0 <= brightness <= 100:
+                    yield (timestamp, brightness)
+                else:
+                    error('Skipping invalid percentage: {}.'.format(
+                        brightness))
 
 
 def get_latest(config):
