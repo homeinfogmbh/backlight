@@ -19,6 +19,7 @@ of graphics cards unter '/sys/class/backlight/<graphics_card>/',
 provided they implement the files 'brightness', 'actual_brightness'
 and 'max_brightness' in the respective folder.
 """
+import sys
 from contextlib import suppress
 from datetime import datetime
 from json import load
@@ -167,12 +168,12 @@ Options:
                 graphics_cards, config_file, reset=reset, tick=tick)
         except NoSupportedGraphicsCards:
             error('No supported graphics cards found.')
-            return 3
+            sys.exit(3)
         else:
             if daemon.spawn():
-                return 0
+                sys.exit(0)
 
-            return 1
+            sys.exit(1)
 
     @property
     def brightness(self):

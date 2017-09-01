@@ -76,14 +76,14 @@ Options:
             cli = CLI(graphics_cards)
         except NoSupportedGraphicsCards:
             error('No supported graphics cards found.')
-            return 3
+            sys.exit(3)
         else:
             value = options['<value>']
 
             if value:
-                return cli.set_brightness(value, raw=options['--raw'])
+                sys.exit(cli.set_brightness(value, raw=options['--raw']))
 
-            return cli.print_brightness(raw=options['--raw'])
+            sys.exit(cli.print_brightness(raw=options['--raw']))
 
     def print_brightness(self, raw=False):
         """Returns the current backlight brightness."""
