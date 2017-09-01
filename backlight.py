@@ -381,9 +381,9 @@ Usage:
     backlight [<value>] [options]
 
 Options:
-    --graphics-card=<graphics_card>     Sets the desired graphics card.
-    --raw                               Get / set raw brightness.
-    --help                              Shows this page.
+    --graphics-card=<graphics_card>   Sets the desired graphics card.
+    --raw                             Work with raw values instead of percent.
+    --help                            Shows this page.
 """
 
     def __init__(self, graphics_cards):
