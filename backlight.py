@@ -6,7 +6,7 @@ provided they implement both files 'brightness' and 'max_brightness'
 in the respective folder.
 """
 from contextlib import suppress
-from datetime import datetime, time
+from datetime import datetime
 from json import load
 from os import listdir
 from os.path import exists, isfile, join
@@ -30,7 +30,7 @@ __all__ = [
     'DoesNotSupportAPI',
     'NoSupportedGraphicsCards',
     'NoLatestEntry',
-    'strip_time',
+    'stripped_datetime',
     'load_config',
     'parse_config',
     'get_latest',
@@ -85,10 +85,13 @@ def log(*msgs):
     print(*msgs, flush=True)
 
 
-def strip_time(timestamp):
-    """Returns the time with hours and minutes only."""
+def stripped_datetime(date_time=None):
+    """Gets current date time, exact to minute."""
 
-    return time(hour=timestamp.hour, minute=timestamp.minute)
+    date_time = date_time or datetime.now()
+    return datetime(
+        year=date_time.year, month=date_time.month, day=date_time.day,
+        hour=date_time.hour, minute=date_time.minute)
 
 
 def get_backlight(graphics_cards):
@@ -135,7 +138,7 @@ def parse_config(config):
 def get_latest(config):
     """Returns the last config entry from the provided configuration."""
 
-    now = strip_time(datetime.now().time())
+    now = stripped_datetime().time()
     sorted_values = sorted(config.items())
     latest = None
 
@@ -281,7 +284,7 @@ Options:
         self.reset = reset
         self.tick = tick
         self._initial_brightness = self._backlight.percent
-        self._last_timestamp = None
+        self._last = None
 
     @classmethod
     def run(cls):
@@ -330,14 +333,14 @@ Options:
         log('Initial brightness is {}%.'.format(self._initial_brightness))
 
         try:
-            self._last_timestamp, self.brightness = get_latest(self.config)
+            timestamp, self.brightness = get_latest(self.config)
         except NoLatestEntry:
             error('Latest entry could not be determined.')
             error('Falling back to 100%.')
             self.brightness = 100
         else:
             log('Loaded latest setting from {}.'.format(
-                self._last_timestamp.strftime(TIME_FORMAT)))
+                timestamp.strftime(TIME_FORMAT)))
 
     def _shutdown(self):
         """Performs shutdown tasks."""
@@ -353,13 +356,13 @@ Options:
         self._startup()
 
         while True:
-            now = strip_time(datetime.now().time())
+            now = stripped_datetime()
 
-            if now != self._last_timestamp:
+            if self._last is None or now > self._last:
                 with suppress(KeyError):
-                    self.brightness = self.config[now]
+                    self.brightness = self.config[now.time()]
 
-                self._last_timestamp = now
+                self._last = now
 
             try:
                 sleep(self.tick)
