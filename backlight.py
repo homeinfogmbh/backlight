@@ -166,7 +166,12 @@ class Backlight():
 
     @classmethod
     def load(cls, graphics_cards=None):
-        """Loads the backlight from the respective graphics cards."""
+        """Loads the backlight from the respective graphics cards.
+
+        If no graphics cards have been defined, seek BASEDIR for
+        available graphics card and return backlight for the first
+        graphics card that implements the API.
+        """
         if not graphics_cards:
             graphics_cards = listdir(BASEDIR)
 
