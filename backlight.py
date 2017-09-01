@@ -2,8 +2,8 @@
 
 This module supports getting and setting of the backlight brightness
 of graphics cards unter '/sys/class/backlight/<graphics_card>/',
-provided they implement both files 'brightness' and 'max_brightness'
-in the respective folder.
+provided they implement the files 'brightness', 'actual_brightness'
+and 'max_brightness' in the respective folder.
 """
 from contextlib import suppress
 from datetime import datetime
