@@ -10,7 +10,7 @@ from datetime import datetime, time
 from json import load
 from os import listdir
 from os.path import exists, isfile, join
-from sys import stderr
+from sys import exit, stderr
 from time import sleep
 
 try:
