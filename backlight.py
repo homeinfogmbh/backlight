@@ -18,10 +18,9 @@ try:
 except ImportError:
     def docopt(_):
         """Docopt mockup to fail if invoked."""
+        print('WARNING: "docopt" not installed.', file=stderr, flush=True)
+        print('Daemon and CLI unavailable.', file=stderr, flush=True)
         exit(127)
-
-    print('WARNING: "docopt" not installed.', file=stderr, flush=True)
-    print('Daemon and CLI unavailable.', file=stderr, flush=True)
 
 
 __all__ = [
