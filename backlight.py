@@ -186,7 +186,7 @@ class Backlight():
 
         for graphics_card in graphics_cards:
             with suppress(DoesNotExist, DoesNotSupportAPI):
-                return cls(graphics_card)
+                return cls(str(graphics_card))
 
         raise NoSupportedGraphicsCards() from None
 
