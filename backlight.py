@@ -397,9 +397,11 @@ Options:
     def run(cls):
         """Runs as CLI program."""
         options = docopt(cls.__doc__)
+        graphics_card = options['--graphics-card']
+        graphics_cards = [graphics_card] if graphics_card else None
 
         try:
-            cli = CLI([options['--graphics-card']])
+            cli = CLI(graphics_cards)
         except NoSupportedGraphicsCards:
             error('No supported graphics cards found.')
             return 3
