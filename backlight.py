@@ -20,7 +20,7 @@ except ImportError:
         """Docopt mockup to fail if invoked."""
         print('WARNING: "docopt" not installed.', file=stderr, flush=True)
         print('Daemon and CLI unavailable.', file=stderr, flush=True)
-        exit(127)
+        exit(5)
 
 
 __all__ = [
@@ -102,13 +102,6 @@ def get_backlight(graphics_cards):
             return GraphicsCard(graphics_card).backlight
 
     raise NoSupportedGraphicsCards() from None
-
-
-def read_brightness(path):
-    """Reads the raw brightness from the respective file."""
-
-    with open(path, 'r') as file:
-        return file.read().strip()
 
 
 def load_config(path):
@@ -222,12 +215,14 @@ class Backlight():
     @property
     def max(self):
         """Returns the raw maximum brightness."""
-        return int(read_brightness(self._max_file))
+        with open(self._max_file, 'r') as file:
+            return int(file.read().strip())
 
     @property
     def raw(self):
         """Returns the raw brightness."""
-        return read_brightness(self._getter_file)
+        with open(self._getter_file, 'r') as file:
+            return file.read().strip()
 
     @raw.setter
     def raw(self, brightness):
