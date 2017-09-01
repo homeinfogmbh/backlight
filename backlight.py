@@ -126,11 +126,11 @@ def load_config(path):
 def parse_config(config):
     """Parses the configuration dictionary."""
 
-    for timestamp_string, brightness in config.items():
+    for timestamp, brightness in config.items():
         try:
-            timestamp = datetime.strptime(timestamp_string, TIME_FORMAT).time()
+            timestamp = datetime.strptime(timestamp, TIME_FORMAT).time()
         except ValueError:
-            error('Skipping invalid timestamp: {}.'.format(timestamp_string))
+            error('Skipping invalid timestamp: {}.'.format(timestamp))
         else:
             yield (timestamp, brightness)
 
