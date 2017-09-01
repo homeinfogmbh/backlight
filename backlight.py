@@ -141,8 +141,8 @@ def parse_config(config):
                 if 0 <= brightness <= 100:
                     yield (timestamp, brightness)
                 else:
-                    error('Skipping invalid percentage: {}.'.format(
-                        brightness))
+                    error('Skipping invalid percentage: {} at {}.'.format(
+                        brightness, timestamp.strftime(TIME_FORMAT)))
 
 
 def get_latest(config):
