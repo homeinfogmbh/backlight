@@ -135,7 +135,7 @@ class Backlight():
     def raw(self, brightness):
         """Sets the raw brightness."""
         with open(self._setter_file, 'w') as file:
-            return file.write('{}\n'.format(brightness))
+            file.write('{}\n'.format(brightness))
 
     @property
     def value(self):
