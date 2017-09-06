@@ -21,8 +21,7 @@ the files 'brightness', 'actual_brightness' and 'max_brightness'
 in the respective folder.
 """
 from contextlib import suppress
-from os import listdir
-from os.path import exists, isfile, join
+from pathlib import Path
 
 
 __all__ = [
@@ -33,7 +32,7 @@ __all__ = [
     'Backlight']
 
 
-BASEDIR = '/sys/class/backlight'
+BASEDIR = Path('/sys/class/backlight')
 
 
 class DoesNotExist(Exception):
@@ -63,10 +62,10 @@ class Backlight():
         """Sets the respective graphics card."""
         self._graphics_card = graphics_card
 
-        if not exists(self._path):
+        if not self._path.exists():
             raise DoesNotExist()
 
-        if not all(isfile(file) for file in self._files):
+        if not all(file.is_file() for file in self._files):
             raise DoesNotSupportAPI()
 
     def __str__(self):
@@ -81,8 +80,7 @@ class Backlight():
         available graphics card and return backlight for the first
         graphics card that implements the API.
         """
-        if not graphics_cards:
-            graphics_cards = listdir(BASEDIR)
+        graphics_cards = graphics_cards or BASEDIR.iterdir()
 
         for graphics_card in graphics_cards:
             with suppress(DoesNotExist, DoesNotSupportAPI):
@@ -95,22 +93,22 @@ class Backlight():
         """Returns the absolute path to the
         graphics card's device folder.
         """
-        return join(BASEDIR, self._graphics_card)
+        return BASEDIR.joinpath(self._graphics_card)
 
     @property
     def _max_file(self):
         """Returns the path of the maximum brightness file."""
-        return join(self._path, 'max_brightness')
+        return self._path.joinpath('max_brightness')
 
     @property
     def _setter_file(self):
         """Returns the path of the backlight file."""
-        return join(self._path, 'brightness')
+        return self._path.joinpath('brightness')
 
     @property
     def _getter_file(self):
         """Returns the file to read the current brightness from."""
-        return join(self._path, 'actual_brightness')
+        return self._path.joinpath('actual_brightness')
 
     @property
     def _files(self):
