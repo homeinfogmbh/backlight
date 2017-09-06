@@ -53,6 +53,8 @@ Usage:
 
 Options:
     --graphics-card=<graphics_card>   Sets the desired graphics card.
+    --precision=<digits>              Round percentage to the provided amount \
+of digits.
     --raw                             Work with raw values instead of percent.
     --help                            Shows this page.
 """
@@ -67,6 +69,15 @@ Options:
         options = docopt(cls.__doc__)
         graphics_card = options['--graphics-card']
         graphics_cards = [graphics_card] if graphics_card else None
+        precision = options['--precision']
+
+        if precision is not None:
+            try:
+                precision = int(precision)
+            except ValueError:
+                error('Invalid integer value for precision: {}.'.format(
+                    precision))
+                exit_(2)
 
         try:
             cli = cls(graphics_cards)
@@ -79,11 +90,18 @@ Options:
             if value:
                 exit_(cli.set_brightness(value, raw=options['--raw']))
 
-            exit_(cli.print_brightness(raw=options['--raw']))
+            exit_(cli.print_brightness(
+                raw=options['--raw'], precision=precision))
 
-    def print_brightness(self, raw=False):
+    def print_brightness(self, raw=False, precision=None):
         """Returns the current backlight brightness."""
-        print(self._backlight.raw if raw else self._backlight.percent)
+        if raw:
+            print(self._backlight.raw)
+        elif precision is None:
+            print(round(self._backlight.percent))
+        else:
+            print(round(self._backlight.percent, precision))
+
         return 0
 
     def set_brightness(self, value, raw=False):
