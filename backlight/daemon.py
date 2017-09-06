@@ -147,7 +147,7 @@ Options:
         self.config = dict(parse_config(load_config(config_file)))
         self.reset = reset
         self.tick = tick
-        self._initial_brightness = self._backlight.percent
+        self._initial_brightness = round(self.brightness, 2)
         self._last = None
 
     @classmethod
