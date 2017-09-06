@@ -146,7 +146,7 @@ class Backlight():
     @property
     def percent(self):
         """Returns the current brightness in percent."""
-        return round(self.value / self.max * 100, 2)
+        return self.value / self.max * 100
 
     @percent.setter
     def percent(self, percent):
