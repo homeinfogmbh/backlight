@@ -18,45 +18,38 @@ Indicates that the provided graphics card does not implement our API.
 
 #### `NoSupportedGraphicsCards`
 Indicates that no supported graphics cards could be found in either the
-provided pool or, if none was supplied, the system.
+provided pool or, if none was supplied, on the system.
 
 ### Interface
-Provides an abtracting interface to the backlight API provided under
-`/sys/class/backlight/<graphics_card>`.
+The class `backlight.api.Backlight` provides an abtracting interface to the
+backlight API provided under `/sys/class/backlight/<graphics_card>`.
 
 #### `Backlight(graphics_card)`
-Creates a new backlight instance using the respective graphics card.
-
-If the provided graphics card does not exist, it raises `DoesNotExist`.
-
-If the provided graphics card does not support this API, it raises
-`DoesNotSupportAPI`.
+Creates a new backlight instance using the respective graphics card.  
+Raises `DoesNotExist` if the provided graphics card does not exist or
+`DoesNotSupportAPI` if the provided graphics card does not support this API.
 
 #### `Backlight.load(graphics_cards=None)`
 Loads the backlight using the first working graphics card specified in
-`graphics_cards`.
-
-If `graphics_cards` is `None`, it will use the first working graphics card
-found on the system.
-
+`graphics_cards` or the first working graphics card found on the system
+if `graphics_cards` is `None`.  
 If no provided graphics cards could be found, it raises
 `NoSupportedGraphicsCards`.
 
 #### `Backlight.max`
-Property to get the maximum raw backlight value.
+Read-only property to get the maximum raw backlight value.  
 The default minimum raw backlight value is always `0`.
-This property is read-only.
 
 #### `Backlight.raw`
-Get and sets the raw backlight brightness of the used device as `str`.
+Get and sets the raw backlight brightness of the used device as `str`.  
 The conditions and constraints of `Backlight.value` apply accordingly, except
 that the integer values are represented by base-10 string representations.
 
 #### `Backlight.value`
-Gets and sets the raw backlight brightness of the used device, as `int`.
+Gets and sets the raw backlight brightness of the used device, as `int`.  
 The valid values for this property are integers from `0` to `Backlight.max`
 including both values and vary between different devices.
 
 #### `Backlight.percent`
-Gets and sets the raw backlight brightness in percent.
+Gets and sets the raw backlight brightness in percent.  
 The valid values for this property range from `0` to `100` including both.
