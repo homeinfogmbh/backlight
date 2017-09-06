@@ -15,16 +15,16 @@
 """A command line interface program to read
 and set the screen's backlight brightnesss.
 """
-import sys
+from sys import stderr, exit as exit_
 
 try:
     from docopt import docopt
 except ImportError:
     def docopt(_):
         """Docopt mockup to fail if invoked."""
-        print('WARNING: "docopt" not installed.', file=sys.stderr, flush=True)
-        print('Daemon and CLI unavailable.', file=sys.stderr, flush=True)
-        sys.exit(5)
+        print('WARNING: "docopt" not installed.', file=stderr, flush=True)
+        print('Daemon and CLI unavailable.', file=stderr, flush=True)
+        exit_(5)
 
 from backlight.api import NoSupportedGraphicsCards, Backlight
 
@@ -34,7 +34,7 @@ __all__ = ['error', 'log', 'CLI']
 def error(*msgs):
     """Logs error messages."""
 
-    print(*msgs, file=sys.stderr, flush=True)
+    print(*msgs, file=stderr, flush=True)
 
 
 def log(*msgs):
@@ -72,14 +72,14 @@ Options:
             cli = CLI(graphics_cards)
         except NoSupportedGraphicsCards:
             error('No supported graphics cards found.')
-            sys.exit(3)
+            exit_(3)
         else:
             value = options['<value>']
 
             if value:
-                sys.exit(cli.set_brightness(value, raw=options['--raw']))
+                exit_(cli.set_brightness(value, raw=options['--raw']))
 
-            sys.exit(cli.print_brightness(raw=options['--raw']))
+            exit_(cli.print_brightness(raw=options['--raw']))
 
     def print_brightness(self, raw=False):
         """Returns the current backlight brightness."""

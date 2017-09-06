@@ -15,10 +15,10 @@
 """A daemon to update the screen's backlight brightness
 at given timestamps to the respective value.
 """
-import sys
 from contextlib import suppress
 from datetime import datetime
 from json import load
+from sys import exit as exit_
 from time import sleep
 
 from backlight.api import NoSupportedGraphicsCards, Backlight
@@ -164,12 +164,12 @@ Options:
                 graphics_cards, config_file, reset=reset, tick=tick)
         except NoSupportedGraphicsCards:
             error('No supported graphics cards found.')
-            sys.exit(3)
+            exit_(3)
         else:
             if daemon.spawn():
-                sys.exit(0)
+                exit_(0)
 
-            sys.exit(1)
+            exit_(1)
 
     @property
     def brightness(self):
