@@ -115,9 +115,7 @@ class Backlight():
     @property
     def _files(self):
         """Yields the graphics cards API's files."""
-        yield self._max_file
-        yield self._setter_file
-        yield self._getter_file
+        return (self._max_file, self._setter_file, self._getter_file)
 
     @property
     def max(self):
