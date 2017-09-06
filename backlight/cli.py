@@ -69,7 +69,7 @@ Options:
         graphics_cards = [graphics_card] if graphics_card else None
 
         try:
-            cli = CLI(graphics_cards)
+            cli = cls(graphics_cards)
         except NoSupportedGraphicsCards:
             error('No supported graphics cards found.')
             exit_(3)
@@ -83,11 +83,7 @@ Options:
 
     def print_brightness(self, raw=False):
         """Returns the current backlight brightness."""
-        if raw:
-            print(self._backlight.raw)
-        else:
-            print(self._backlight.percent)
-
+        print(self._backlight.raw if raw else self._backlight.percent)
         return 0
 
     def set_brightness(self, value, raw=False):
@@ -103,9 +99,9 @@ Options:
                 return 1
         else:
             try:
-                value = int(value)
+                value = float(value)
             except ValueError:
-                error('Value must be an integer.')
+                error('Percentage must be a float.')
                 return 2
             else:
                 try:

@@ -84,7 +84,7 @@ def parse_config(config):
             error('Skipping invalid timestamp: {}.'.format(timestamp))
         else:
             try:
-                brightness = int(brightness)
+                brightness = float(brightness)
             except (TypeError, ValueError):
                 error('Skipping invalid brightness: "{}" at {}.'.format(
                     brightness, timestamp.strftime(TIME_FORMAT)))
