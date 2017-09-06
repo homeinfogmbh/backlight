@@ -33,7 +33,7 @@ Raises `DoesNotExist` if the provided graphics card does not exist or
 Loads the backlight using the first working graphics card specified in
 `graphics_cards` or the first working graphics card found on the system
 if `graphics_cards` is `None`.  
-If no provided graphics cards could be found, it raises
+If no working graphics cards could be found, it raises
 `NoSupportedGraphicsCards`.
 
 #### `Backlight.max`
@@ -46,10 +46,10 @@ The conditions and constraints of `Backlight.value` apply accordingly, except
 that the integer values are represented by base-10 string representations.
 
 #### `Backlight.value`
-Gets and sets the raw backlight brightness of the used device, as `int`.  
+Gets and sets the raw backlight brightness of the used device as `int`.  
 The valid values for this property are integers from `0` to `Backlight.max`
 including both values and vary between different devices.
 
 #### `Backlight.percent`
-Gets and sets the raw backlight brightness in percent.  
+Gets and sets the raw backlight brightness in percent as `float`.  
 The valid values for this property range from `0` to `100` including both.
