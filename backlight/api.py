@@ -152,6 +152,6 @@ class Backlight():
     def percent(self, percent):
         """Returns the current brightness in percent."""
         if 0 <= percent <= 100:
-            self.value = self.max * percent / 100
+            self.value = round(self.max * percent / 100)
         else:
             raise ValueError('Invalid percentage: {}.'.format(percent))
