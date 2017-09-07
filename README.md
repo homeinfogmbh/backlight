@@ -51,5 +51,5 @@ The valid values for this property are integers from `0` to `Backlight.max`
 including both values and vary between different devices.
 
 #### `Backlight.percent`
-Gets and sets the raw backlight brightness in percent as `float`.  
+Gets and sets the raw backlight brightness in percent as `int`.  
 The valid values for this property range from `0` to `100` including both.
