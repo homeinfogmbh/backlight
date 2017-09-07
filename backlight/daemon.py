@@ -84,7 +84,7 @@ def parse_config(config):
             error('Skipping invalid timestamp: {}.'.format(timestamp))
         else:
             try:
-                brightness = float(brightness)
+                brightness = int(brightness)
             except (TypeError, ValueError):
                 error('Skipping invalid brightness: "{}" at {}.'.format(
                     brightness, timestamp.strftime(TIME_FORMAT)))
@@ -147,7 +147,7 @@ Options:
         self.config = dict(parse_config(load_config(config_file)))
         self.reset = reset
         self.tick = tick
-        self._initial_brightness = round(self.brightness, 2)
+        self._initial_brightness = self.brightness
         self._last = None
 
     @classmethod

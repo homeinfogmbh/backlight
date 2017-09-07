@@ -53,8 +53,6 @@ Usage:
 
 Options:
     --graphics-card=<graphics_card>   Sets the desired graphics card.
-    --precision=<digits>              Round percentage to the provided amount \
-of digits.
     --raw                             Work with raw values instead of percent.
     --help                            Shows this page.
 """
@@ -69,15 +67,6 @@ of digits.
         options = docopt(cls.__doc__)
         graphics_card = options['--graphics-card']
         graphics_cards = [graphics_card] if graphics_card else None
-        precision = options['--precision']
-
-        if precision is not None:
-            try:
-                precision = int(precision)
-            except ValueError:
-                error('Invalid integer value for precision: {}.'.format(
-                    precision))
-                exit_(2)
 
         try:
             cli = cls(graphics_cards)
@@ -90,18 +79,11 @@ of digits.
             if value:
                 exit_(cli.set_brightness(value, raw=options['--raw']))
 
-            exit_(cli.print_brightness(
-                raw=options['--raw'], precision=precision))
+            exit_(cli.print_brightness(raw=options['--raw']))
 
-    def print_brightness(self, raw=False, precision=None):
+    def print_brightness(self, raw=False):
         """Returns the current backlight brightness."""
-        if raw:
-            print(self._backlight.raw)
-        elif precision is None:
-            print(round(self._backlight.percent))
-        else:
-            print(round(self._backlight.percent, precision))
-
+        print(self._backlight.raw if raw else self._backlight.percent)
         return 0
 
     def set_brightness(self, value, raw=False):
@@ -117,9 +99,9 @@ of digits.
                 return 1
         else:
             try:
-                value = float(value)
+                value = int(value)
             except ValueError:
-                error('Percentage must be a float.')
+                error('Percentage must be an integer.')
                 return 2
             else:
                 try:
