@@ -54,6 +54,7 @@ Usage:
 Options:
     --graphics-card=<graphics_card>   Sets the desired graphics card.
     --raw                             Work with raw values instead of percent.
+    --max                             Returns the maximum raw backlight value.
     --help                            Shows this page.
 """
 
@@ -72,18 +73,23 @@ Options:
             cli = cls(graphics_cards)
         except NoSupportedGraphicsCards:
             error('No supported graphics cards found.')
-            exit_(3)
+            return 3
         else:
             value = options['<value>']
 
             if value:
-                exit_(cli.set_brightness(value, raw=options['--raw']))
+                return cli.set_brightness(value, raw=options['--raw'])
 
-            exit_(cli.print_brightness(raw=options['--raw']))
+            return cli.print_brightness(
+                raw=options['--raw'], maximum=options['--max'])
 
-    def print_brightness(self, raw=False):
+    def print_brightness(self, raw=False, maximum=False):
         """Returns the current backlight brightness."""
-        print(self._backlight.raw if raw else self._backlight.percent)
+        if maximum:
+            print(self._backlight.max)
+        else:
+            print(self._backlight.raw if raw else self._backlight.percent)
+
         return 0
 
     def set_brightness(self, value, raw=False):

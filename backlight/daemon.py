@@ -18,7 +18,6 @@ at given timestamps to the respective value.
 from contextlib import suppress
 from datetime import datetime
 from json import load
-from sys import exit as exit_
 from time import sleep
 
 from backlight.api import NoSupportedGraphicsCards, Backlight
@@ -164,12 +163,12 @@ Options:
                 graphics_cards, config_file, reset=reset, tick=tick)
         except NoSupportedGraphicsCards:
             error('No supported graphics cards found.')
-            exit_(3)
+            return 3
         else:
             if daemon.spawn():
-                exit_(0)
+                return 0
 
-            exit_(1)
+            return 1
 
     @property
     def brightness(self):
