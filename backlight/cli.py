@@ -43,7 +43,7 @@ def log(*msgs):
     print(*msgs, flush=True)
 
 
-class CLI():
+class CLI:
     """backlight
 
 A screen backlight CLI interface.

@@ -55,7 +55,7 @@ class NoSupportedGraphicsCards(Exception):
     pass
 
 
-class Backlight():
+class Backlight:
     """Backlight handler for graphics cards."""
 
     def __init__(self, graphics_card):
