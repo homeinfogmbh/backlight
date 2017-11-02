@@ -44,7 +44,7 @@ def log(*msgs):
 
 
 class CLI:
-    """backlight
+    """backlight.
 
 A screen backlight CLI interface.
 
@@ -52,6 +52,10 @@ Usage:
     backlight [<value>] [options]
 
 Options:
+    --increase                        Increase current value by the given \
+value.
+    --decrease                        Decrease current value by the given \
+value.
     --graphics-card=<graphics_card>   Sets the desired graphics card.
     --raw                             Work with raw values instead of percent.
     --max                             Returns the maximum raw backlight value.
@@ -78,7 +82,16 @@ Options:
             value = options['<value>']
 
             if value:
-                return cli.set_brightness(value, raw=options['--raw'])
+                try:
+                    value = int(value)
+                except ValueError:
+                    error('Value must be an integer.')
+                    return 2
+                else:
+                    return cli.set_brightness(
+                        value, raw=options['--raw'],
+                        increase=options['--increase'],
+                        decrease=options['--decrease'])
 
             return cli.print_brightness(
                 raw=options['--raw'], maximum=options['--max'])
@@ -92,9 +105,18 @@ Options:
 
         return 0
 
-    def set_brightness(self, value, raw=False):
+    def set_brightness(self, value, raw=False, increase=False, decrease=False):
         """Seths the backlight brightness."""
+        if increase and decrease:
+            error('Increase and decrease are mutually exclusive.')
+            return 4
+
         if raw:
+            if increase:
+                value = min(self._backlight.max, self._backlight.value + value)
+            elif decrease:
+                value = max(0, self._backlight.value - value)
+
             try:
                 self._backlight.raw = value
             except PermissionError:
@@ -104,17 +126,16 @@ Options:
                 error('Invalid brightness: {}.'.format(value))
                 return 1
         else:
+            if increase:
+                value = min(100, self._backlight.percent + value)
+            elif decrease:
+                value = max(0, self._backlight.percent - value)
+
             try:
-                value = int(value)
+                self._backlight.percent = value
             except ValueError:
-                error('Percentage must be an integer.')
-                return 2
-            else:
-                try:
-                    self._backlight.percent = value
-                except ValueError:
-                    error('Invalid percentage: {}.'.format(value))
-                    return 1
-                except PermissionError:
-                    error('Cannot set brightness. Try running as root.')
-                    return 4
+                error('Invalid percentage: {}.'.format(value))
+                return 1
+            except PermissionError:
+                error('Cannot set brightness. Try running as root.')
+                return 4
