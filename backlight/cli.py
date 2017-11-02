@@ -139,3 +139,5 @@ value.
             except PermissionError:
                 error('Cannot set brightness. Try running as root.')
                 return 4
+
+        return 0
