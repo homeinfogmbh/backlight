@@ -121,7 +121,7 @@ def get_latest(config):
     return latest
 
 
-class Daemon():
+class Daemon:
     """backlightd
 
 A screen backlight daemon.
