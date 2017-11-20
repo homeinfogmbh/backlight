@@ -131,7 +131,7 @@ class Backlight():
     def raw(self, brightness):
         """Sets the raw brightness."""
         with open(self._setter_file, 'w') as file:
-            file.write('{}\n'.format(brightness))
+            file.write(f'{brightness}\n')
 
     @property
     def value(self):
@@ -154,4 +154,4 @@ class Backlight():
         if 0 <= percent <= 100:
             self.value = self.max * percent // 100
         else:
-            raise ValueError('Invalid percentage: {}.'.format(percent))
+            raise ValueError(f'Invalid percentage: {percent}.')

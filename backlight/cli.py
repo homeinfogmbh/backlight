@@ -101,7 +101,7 @@ Options:
                 error('Cannot set brightness. Try running as root.')
                 return 4
             except OSError:
-                error('Invalid brightness: {}.'.format(value))
+                error(f'Invalid brightness: {value}.')
                 return 1
         else:
             try:
@@ -109,12 +109,12 @@ Options:
             except ValueError:
                 error('Percentage must be an integer.')
                 return 2
-            else:
-                try:
-                    self._backlight.percent = value
-                except ValueError:
-                    error('Invalid percentage: {}.'.format(value))
-                    return 1
-                except PermissionError:
-                    error('Cannot set brightness. Try running as root.')
-                    return 4
+
+            try:
+                self._backlight.percent = value
+            except ValueError:
+                error(f'Invalid percentage: {value}.')
+                return 1
+            except PermissionError:
+                error('Cannot set brightness. Try running as root.')
+                return 4

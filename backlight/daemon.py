@@ -64,11 +64,11 @@ def load_config(path):
         with open(path, 'r') as config_file:
             return load(config_file)
     except PermissionError:
-        error('Cannot read config file: {}.'.format(path))
+        error(f'Cannot read config file: {path}.')
     except FileNotFoundError:
-        error('Config file does not exist: {}.'.format(path))
+        error(f'Config file does not exist: {path}.')
     except ValueError:
-        error('Config file has invalid content: {}.'.format(path))
+        error(f'Config file has invalid content: {path}.')
 
     return {}
 
@@ -80,19 +80,20 @@ def parse_config(config):
         try:
             timestamp = datetime.strptime(timestamp, TIME_FORMAT).time()
         except ValueError:
-            error('Skipping invalid timestamp: {}.'.format(timestamp))
+            error(f'Invalid timestamp "{timestamp}".')
+            continue
         else:
-            try:
-                brightness = int(brightness)
-            except (TypeError, ValueError):
-                error('Skipping invalid brightness: "{}" at {}.'.format(
-                    brightness, timestamp.strftime(TIME_FORMAT)))
+            timestamp = timestamp.strftime(TIME_FORMAT)
+
+        try:
+            brightness = int(brightness)
+        except (TypeError, ValueError):
+            error(f'Invalid brightness "{brightness}" at {timestamp}.')
+        else:
+            if 0 <= brightness <= 100:
+                yield (timestamp, brightness)
             else:
-                if 0 <= brightness <= 100:
-                    yield (timestamp, brightness)
-                else:
-                    error('Skipping invalid percentage: {} at {}.'.format(
-                        brightness, timestamp.strftime(TIME_FORMAT)))
+                error(f'Invalid percentage: {brightness} at {timestamp}.')
 
 
 def get_latest(config):
@@ -181,18 +182,18 @@ Options:
         try:
             self._backlight.percent = percent
         except ValueError:
-            error('Invalid brightness: {}.'.format(percent))
+            error(f'Invalid brightness: {percent}.')
         except PermissionError:
             error('Cannot set brightness. Is this service running as root?')
         else:
-            log('Set brightness to {}%.'.format(percent))
+            log(f'Set brightness to {percent}%.')
 
     def _startup(self):
         """Starts up the daemon."""
         log('Starting up...')
-        log('Tick is {} second(s).'.format(self.tick))
-        log('Detected graphics card: {}.'.format(self._backlight))
-        log('Initial brightness is {}%.'.format(self._initial_brightness))
+        log(f'Tick is {self.tick} second(s).')
+        log(f'Detected graphics card: {self._backlight}.')
+        log(f'Initial brightness is {self._initial_brightness}%.')
 
         try:
             timestamp, self.brightness = get_latest(self.config)
@@ -201,8 +202,8 @@ Options:
             error('Falling back to 100%.')
             self.brightness = 100
         else:
-            log('Loaded latest setting from {}.'.format(
-                timestamp.strftime(TIME_FORMAT)))
+            timestamp = timestamp.strftime(TIME_FORMAT)
+            log(f'Loaded latest setting from {timestamp}.')
 
     def _shutdown(self):
         """Performs shutdown tasks."""
