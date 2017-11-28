@@ -16,8 +16,15 @@
 #  along with this program. If not, see <http://www.gnu.org/licenses/>.
 """A linux screen backlight API, cli program and daemon."""
 
-from .api import Backlight
+from .api import DoesNotExist, DoesNotSupportAPI, NoSupportedGraphicsCards, \
+    Backlight
 from .cli import CLI
 from .daemon import Daemon
 
-__all__ = ['Backlight', 'CLI', 'Daemon']
+__all__ = [
+    'DoesNotExist',
+    'DoesNotSupportAPI',
+    'NoSupportedGraphicsCards',
+    'Backlight',
+    'CLI',
+    'Daemon']
