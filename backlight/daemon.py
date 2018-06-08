@@ -165,11 +165,11 @@ Options:
         except NoSupportedGraphicsCards:
             error('No supported graphics cards found.')
             return 3
-        else:
-            if daemon.spawn():
-                return 0
 
-            return 1
+        if daemon.spawn():
+            return 0
+
+        return 1
 
     @property
     def brightness(self):

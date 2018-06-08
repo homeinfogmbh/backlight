@@ -78,23 +78,23 @@ value.
         except NoSupportedGraphicsCards:
             error('No supported graphics cards found.')
             return 3
-        else:
-            value = options['<value>']
 
-            if value:
-                try:
-                    value = int(value)
-                except ValueError:
-                    error('Value must be an integer.')
-                    return 2
-                else:
-                    return cli.set_brightness(
-                        value, raw=options['--raw'],
-                        increase=options['--increase'],
-                        decrease=options['--decrease'])
+        value = options['<value>']
 
-            return cli.print_brightness(
-                raw=options['--raw'], maximum=options['--max'])
+        if value:
+            try:
+                value = int(value)
+            except ValueError:
+                error('Value must be an integer.')
+                return 2
+
+            return cli.set_brightness(
+                value, raw=options['--raw'],
+                increase=options['--increase'],
+                decrease=options['--decrease'])
+
+        return cli.print_brightness(
+            raw=options['--raw'], maximum=options['--max'])
 
     def print_brightness(self, raw=False, maximum=False):
         """Returns the current backlight brightness."""
