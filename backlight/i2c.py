@@ -96,4 +96,5 @@ class ChrontelCH7511B(I2CBacklight):
     def __init__(self, i2c_bus=0):
         """Initializes the Chrontel CH7511B client."""
         super().__init__(i2c_bus, 0x21, 0x6E, range(18))
-        i2cset(self.i2c_bus, self.chip_address, 0x7F, 0xED)     # Initialize.
+        # Initialize duty cycle for PWM1.
+        i2cset(self.i2c_bus, self.chip_address, 0x7F, 0xED)
