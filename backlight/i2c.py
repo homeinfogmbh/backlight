@@ -86,7 +86,7 @@ class I2CBacklight:
     def percent(self, percent):
         """Returns the current brightness in percent."""
         if 0 <= percent <= 100:
-            self.raw = round(100 / self.factor)
+            self.raw = round(percent * self.max / 100)
         else:
             raise ValueError(f'Invalid percentage: {percent}.')
 
