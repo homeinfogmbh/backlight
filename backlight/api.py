@@ -29,6 +29,7 @@ __all__ = [
     'DoesNotExist',
     'DoesNotSupportAPI',
     'NoSupportedGraphicsCards',
+    'load_backlight',
     'Backlight']
 
 
@@ -53,6 +54,18 @@ class NoSupportedGraphicsCards(Exception):
     """Indicates that the available graphics cards are not supported."""
 
     pass
+
+
+def load_backlight(graphics_cards):
+    """Loads the respective graphics card."""
+
+    if isinstance(graphics_cards, Backlight):
+        return graphics_cards
+
+    if isinstance(graphics_cards, list, tuple, set):
+        return Backlight.load(graphics_cards)
+
+    return Backlight(graphics_cards)
 
 
 class Backlight:
@@ -125,7 +138,7 @@ class Backlight:
     def raw(self):
         """Returns the raw brightness."""
         with open(self._getter_file, 'r') as file:
-            return file.read().strip()
+            return int(file.read().strip())
 
     @raw.setter
     def raw(self, brightness):
@@ -134,24 +147,14 @@ class Backlight:
             file.write(f'{brightness}\n')
 
     @property
-    def value(self):
-        """Returns the raw brightness as integer."""
-        return int(self.raw)
-
-    @value.setter
-    def value(self, brightness):
-        """Sets the raw brightness from an integer."""
-        self.raw = str(brightness)
-
-    @property
     def percent(self):
         """Returns the current brightness in percent."""
-        return self.value * 100 // self.max
+        return self.raw * 100 // self.max
 
     @percent.setter
     def percent(self, percent):
         """Returns the current brightness in percent."""
         if 0 <= percent <= 100:
-            self.value = self.max * percent // 100
+            self.raw = self.max * percent // 100
         else:
             raise ValueError(f'Invalid percentage: {percent}.')

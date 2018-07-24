@@ -20,7 +20,7 @@ from datetime import datetime
 from json import load
 from time import sleep
 
-from backlight.api import NoSupportedGraphicsCards, Backlight
+from backlight.api import NoSupportedGraphicsCards, load_backlight
 from backlight.cli import docopt, error, log
 
 
@@ -32,7 +32,6 @@ __all__ = [
     'load_config',
     'parse_config',
     'get_latest',
-    'Backlight',
     'Daemon']
 
 
@@ -143,7 +142,7 @@ Options:
         If none are specified, tries all graphics cards
         within BASEDIR until a working one is found.
         """
-        self._backlight = Backlight.load(graphics_cards)
+        self._backlight = load_backlight(graphics_cards)
         self.config = dict(parse_config(load_config(config_file)))
         self.reset = reset
         self.tick = tick

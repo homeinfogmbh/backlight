@@ -67,8 +67,6 @@ class I2CBacklight:
 
         raise ValueError(value)
 
-    value = raw
-
     @property
     def percent(self):
         """Returns the current brightness in percent."""

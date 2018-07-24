@@ -26,7 +26,7 @@ except ImportError:
         print('Daemon and CLI unavailable.', file=stderr, flush=True)
         exit_(5)
 
-from backlight.api import NoSupportedGraphicsCards, Backlight
+from backlight.api import NoSupportedGraphicsCards, load_backlight
 
 __all__ = ['error', 'log', 'CLI']
 
@@ -64,7 +64,7 @@ value.
 
     def __init__(self, graphics_cards):
         """Sets the graphics cards."""
-        self._backlight = Backlight.load(graphics_cards)
+        self._backlight = load_backlight(graphics_cards)
 
     @classmethod
     def run(cls):
@@ -113,9 +113,9 @@ value.
 
         if raw:
             if increase:
-                value = min(self._backlight.max, self._backlight.value + value)
+                value = min(self._backlight.max, self._backlight.raw + value)
             elif decrease:
-                value = max(0, self._backlight.value - value)
+                value = max(0, self._backlight.raw - value)
 
             try:
                 self._backlight.raw = value
