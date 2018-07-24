@@ -13,7 +13,7 @@ I2CSET = '/usr/bin/i2cset'
 def i2cget(i2c_bus, chip_address, data_address=None, mode=None):
     """Wrapper for i2cget."""
 
-    command = [I2CGET, str(i2c_bus), str(chip_address)]
+    command = [I2CGET, '-y', str(i2c_bus), str(chip_address)]
 
     if data_address is not None:
         command.append(str(data_address))
@@ -27,7 +27,8 @@ def i2cget(i2c_bus, chip_address, data_address=None, mode=None):
 def i2cset(i2c_bus, chip_address, data_address, *values, mode=None):
     """Wrapper for i2cget."""
 
-    command = [I2CSET, str(i2c_bus), str(chip_address), str(data_address)]
+    command = [
+        I2CSET, '-y', str(i2c_bus), str(chip_address), str(data_address)]
 
     if values:
         for value in values:
