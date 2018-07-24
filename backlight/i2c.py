@@ -66,7 +66,7 @@ class I2CBacklight:
         """Sets the raw value."""
         if value in self.values:
             return i2cset(
-                self.i2c_bus, self.chip_address, self.offset, self.value)
+                self.i2c_bus, self.chip_address, self.offset, value)
 
         raise ValueError(value)
 
