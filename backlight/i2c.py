@@ -115,7 +115,7 @@ class I2CBacklight:
 class ChrontelCH7511B(I2CBacklight):
     """Backlight API for Chrontel CH7511B."""
 
-    VALUES = PercentageMap(range(1, 18), range(30, 100))
+    VALUES = PercentageMap(range(1, 18), range(30, 101))
 
     def __init__(self, i2c_bus=0):
         """Initializes the Chrontel CH7511B client."""
