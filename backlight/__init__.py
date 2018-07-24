@@ -17,17 +17,14 @@
 """A linux screen backlight API, cli program and daemon."""
 
 from backlight.api import DoesNotExist, DoesNotSupportAPI, \
-    NoSupportedGraphicsCards, Backlight
+    NoSupportedGraphicsCards, load
 from backlight.cli import CLI
 from backlight.daemon import Daemon
-from backlight.i2c import I2CBacklight, ChrontelCH7511B
 
 __all__ = [
     'DoesNotExist',
     'DoesNotSupportAPI',
     'NoSupportedGraphicsCards',
-    'Backlight',
+    'load',
     'CLI',
-    'Daemon',
-    'I2CBacklight',
-    'ChrontelCH7511B']
+    'Daemon']

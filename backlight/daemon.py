@@ -20,8 +20,8 @@ from datetime import datetime
 from json import load
 from time import sleep
 
-from backlight.api import NoSupportedGraphicsCards
-from backlight.cli import docopt, error, log, by_name
+from backlight.api import NoSupportedGraphicsCards, load as load_backlight
+from backlight.cli import docopt, error, log
 
 
 __all__ = [
@@ -154,13 +154,13 @@ Options:
         """Runs as a daemon."""
         options = docopt(cls.__doc__)
         graphics_card = options['<graphics_card>']
+        backlight = load_backlight(graphics_card)
         config_file = options['--config'] or DEFAULT_CONFIG
         tick = int(options['--tick'])
         reset = options['--reset']
 
         try:
-            daemon = cls(
-                by_name(graphics_card), config_file, reset=reset, tick=tick)
+            daemon = cls(backlight, config_file, reset=reset, tick=tick)
         except NoSupportedGraphicsCards:
             error('No supported graphics cards found.')
             return 3
