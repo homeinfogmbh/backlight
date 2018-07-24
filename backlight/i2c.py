@@ -54,8 +54,8 @@ class PercentageMap(dict):
         percentage = min(percent)
 
         for raw_value in raw:
-            next_percentage = round(percentage + percent_step)
-            self[raw_value] = range(percentage, next_percentage)
+            next_percentage = percentage + percent_step
+            self[raw_value] = range(round(percentage), round(next_percentage))
             percentage = next_percentage
 
     def from_percent(self, percentage):
