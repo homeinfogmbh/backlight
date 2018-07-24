@@ -91,7 +91,7 @@ class I2CBacklight:
     def _write(self, address, value):
         """Reads the respective address."""
         return self.smbus.write_i2c_block_data(
-            self.chip_address, address, [value])[0]
+            self.chip_address, address, [value])
 
 
 class ChrontelCH7511B(I2CBacklight):
