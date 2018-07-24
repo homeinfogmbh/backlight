@@ -3,6 +3,8 @@
 from pathlib import Path
 from subprocess import check_call, check_output
 
+from backlight.api import DoesNotExist
+
 
 __all__ = ['i2cget', 'i2cset', 'I2CBacklight', 'ChrontelCH7511B']
 
@@ -66,7 +68,7 @@ class PercentageMap(dict):
             if percentage in percent:
                 return raw
 
-        raise KeyError(percentage)
+        raise ValueError(percentage)
 
 
 class I2CBacklight:
@@ -78,6 +80,9 @@ class I2CBacklight:
         self.chip_address = chip_address
         self.offset = offset
         self.values = values
+
+        if not self.device.exists():
+            raise DoesNotExist()
 
     @property
     def device(self):
