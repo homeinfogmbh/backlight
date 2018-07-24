@@ -26,7 +26,9 @@ except ImportError:
         print('Daemon and CLI unavailable.', file=stderr, flush=True)
         exit_(5)
 
-from backlight.api import NoSupportedGraphicsCards, load_backlight
+from backlight.api import NoSupportedGraphicsCards, Backlight
+from backlight.i2c import I2C_CARDS
+
 
 __all__ = ['error', 'log', 'CLI']
 
@@ -41,6 +43,15 @@ def log(*msgs):
     """Logs informational messages."""
 
     print(*msgs, flush=True)
+
+
+def by_name(name):
+    """Returns the graphics card by name."""
+
+    try:
+        return I2C_CARDS[name]
+    except KeyError:
+        return Backlight.load([name] if name else None)
 
 
 class CLI:
@@ -62,19 +73,18 @@ value.
     --help                            Shows this page.
 """
 
-    def __init__(self, graphics_cards):
-        """Sets the graphics cards."""
-        self._backlight = load_backlight(graphics_cards)
+    def __init__(self, backlight):
+        """Sets the backlight instance."""
+        self._backlight = backlight
 
     @classmethod
     def run(cls):
         """Runs as CLI program."""
         options = docopt(cls.__doc__)
         graphics_card = options['--graphics-card']
-        graphics_cards = [graphics_card] if graphics_card else None
 
         try:
-            cli = cls(graphics_cards)
+            cli = cls(by_name(graphics_card))
         except NoSupportedGraphicsCards:
             error('No supported graphics cards found.')
             return 3

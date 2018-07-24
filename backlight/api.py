@@ -29,7 +29,6 @@ __all__ = [
     'DoesNotExist',
     'DoesNotSupportAPI',
     'NoSupportedGraphicsCards',
-    'load_backlight',
     'Backlight']
 
 
@@ -54,18 +53,6 @@ class NoSupportedGraphicsCards(Exception):
     """Indicates that the available graphics cards are not supported."""
 
     pass
-
-
-def load_backlight(graphics_cards):
-    """Loads the respective graphics card."""
-
-    if isinstance(graphics_cards, Backlight):
-        return graphics_cards
-
-    if isinstance(graphics_cards, list, tuple, set):
-        return Backlight.load(graphics_cards)
-
-    return Backlight(graphics_cards)
 
 
 class Backlight:

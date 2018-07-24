@@ -5,7 +5,7 @@ from smbus import SMBus
 from backlight.api import DoesNotExist
 
 
-__all__ = ['I2CBacklight', 'ChrontelCH7511B']
+__all__ = ['I2CBacklight', 'ChrontelCH7511B', 'I2C_CARDS']
 
 
 class PercentageMap(dict):
@@ -102,3 +102,7 @@ class ChrontelCH7511B(I2CBacklight):
         super().__init__(i2c_bus, 0x21, 0x6E, self.__class__.VALUES)
         # Initialize duty cycle for PWM1.
         self._write(0x7F, 0xED)
+
+
+I2C_CARDS = {
+    'CH7511B': ChrontelCH7511B}

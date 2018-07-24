@@ -20,8 +20,8 @@ from datetime import datetime
 from json import load
 from time import sleep
 
-from backlight.api import NoSupportedGraphicsCards, load_backlight
-from backlight.cli import docopt, error, log
+from backlight.api import NoSupportedGraphicsCards
+from backlight.cli import docopt, error, log, by_name
 
 
 __all__ = [
@@ -126,7 +126,7 @@ class Daemon:
 A screen backlight daemon.
 
 Usage:
-    backlightd [<graphics_card>...] [options]
+    backlightd [<graphics_card>] [options]
 
 Options:
     --config=<config_file>, -c  Sets the JSON configuration file.
@@ -135,14 +135,14 @@ Options:
     --help                      Shows this page.
 """
 
-    def __init__(self, graphics_cards, config_file, reset=False, tick=1):
+    def __init__(self, backlight, config_file, reset=False, tick=1):
         """Tries the specified graphics cards until
         a working one is found.
 
         If none are specified, tries all graphics cards
         within BASEDIR until a working one is found.
         """
-        self._backlight = load_backlight(graphics_cards)
+        self._backlight = backlight
         self.config = dict(parse_config(load_config(config_file)))
         self.reset = reset
         self.tick = tick
@@ -153,14 +153,14 @@ Options:
     def run(cls):
         """Runs as a daemon."""
         options = docopt(cls.__doc__)
-        graphics_cards = options['<graphics_card>']
+        graphics_card = options['<graphics_card>']
         config_file = options['--config'] or DEFAULT_CONFIG
         tick = int(options['--tick'])
         reset = options['--reset']
 
         try:
-            daemon = Daemon(
-                graphics_cards, config_file, reset=reset, tick=tick)
+            daemon = cls(
+                by_name(graphics_card), config_file, reset=reset, tick=tick)
         except NoSupportedGraphicsCards:
             error('No supported graphics cards found.')
             return 3
