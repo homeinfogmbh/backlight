@@ -16,10 +16,11 @@
 #  along with this program. If not, see <http://www.gnu.org/licenses/>.
 """A linux screen backlight API, cli program and daemon."""
 
-from .api import DoesNotExist, DoesNotSupportAPI, NoSupportedGraphicsCards, \
-    Backlight
-from .cli import CLI
-from .daemon import Daemon
+from backlight.api import DoesNotExist, DoesNotSupportAPI, \
+    NoSupportedGraphicsCards, Backlight
+from backlight.cli import CLI
+from backlight.daemon import Daemon
+from backlight.i2c import I2CBacklight, ChrontelCH7511B
 
 __all__ = [
     'DoesNotExist',
@@ -27,4 +28,6 @@ __all__ = [
     'NoSupportedGraphicsCards',
     'Backlight',
     'CLI',
-    'Daemon']
+    'Daemon',
+    'I2CBacklight',
+    'ChrontelCH7511B']
