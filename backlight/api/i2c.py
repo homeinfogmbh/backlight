@@ -1,11 +1,30 @@
 """Dimming via i2c."""
 
+from hashlib import sha1
+from subprocess import check_output
+
 from smbus import SMBus
 
 from backlight.api.exceptions import DoesNotExist
 
 
-__all__ = ['I2CBacklight', 'ChrontelCH7511B', 'I2C_CARDS']
+__all__ = [
+    'syshash',
+    'PercentageMap',
+    'I2CBacklight',
+    'ChrontelCH7511B',
+    'I2C_CARDS']
+
+
+def syshash():
+    """Returns hashed lspci data."""
+
+    hasher = sha1()
+    lspci = check_output('/usr/bin/lspci')
+    hasher.update(lspci)
+    cpu_model = check_output(('/usr/bin/grep', 'model', '/proc/cpuinfo'))
+    hasher.update(cpu_model)
+    return hasher.hexdigest()
 
 
 class PercentageMap(dict):
@@ -104,4 +123,4 @@ class ChrontelCH7511B(I2CBacklight):
         self._write(0x7F, 0xED)
 
 
-I2C_CARDS = {'CH7511B': ChrontelCH7511B}
+I2C_CARDS = {'53af5eabb6e32c257237ff18b3f047e9fa5e42fd': ChrontelCH7511B}
