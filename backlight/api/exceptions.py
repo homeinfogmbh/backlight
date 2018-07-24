@@ -1,7 +1,11 @@
 """API exceptions."""
 
 
-__all__ = ['DoesNotExist', 'DoesNotSupportAPI', 'NoSupportedGraphicsCards']
+__all__ = [
+    'DoesNotExist',
+    'DoesNotSupportAPI',
+    'NoOutputFound',
+    'NoSupportedGraphicsCards']
 
 
 class DoesNotExist(Exception):
@@ -14,6 +18,12 @@ class DoesNotSupportAPI(Exception):
     """Indicates that the respective graphics
     card does not implement this API.
     """
+
+    pass
+
+
+class NoOutputFound(Exception):
+    """Indicates that no output could be determined."""
 
     pass
 

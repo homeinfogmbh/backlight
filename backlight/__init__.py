@@ -17,7 +17,7 @@
 """A linux screen backlight API, cli program and daemon."""
 
 from backlight.api import DoesNotExist, DoesNotSupportAPI, \
-    NoSupportedGraphicsCards, load, autoload
+    NoSupportedGraphicsCards, load, autoload, brightness
 from backlight.cli import CLI
 from backlight.daemon import Daemon
 
@@ -27,5 +27,6 @@ __all__ = [
     'NoSupportedGraphicsCards',
     'load',
     'autoload',
+    'brightness',
     'CLI',
     'Daemon']

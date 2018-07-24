@@ -1,14 +1,18 @@
 """Miscellaneous functions."""
 
+from collections import namedtuple
 from contextlib import suppress
 
-from backlight.api.exceptions import DoesNotExist, DoesNotSupportAPI, \
-    NoSupportedGraphicsCards
-from backlight.api.i2c import I2C_CARDS, syshash
+from backlight.api.exceptions import DoesNotExist, DoesNotSupportAPI
+from backlight.api.i2c import I2C_CARDS, syshash, I2CBacklight
 from backlight.api.linux import LinuxBacklight
+from backlight.api.xrandr import Xrandr
 
 
-__all__ = ['load', 'autoload']
+__all__ = ['load', 'autoload', 'brightness']
+
+
+Backlight = namedtuple('Backlight', ('percent', 'method'))
 
 
 def load(name):
@@ -35,4 +39,25 @@ def autoload(search=False):
     if search:
         return LinuxBacklight.any()
 
-    raise NoSupportedGraphicsCards()
+    return Xrandr()
+
+
+def brightness(percent):
+    """Set backlight in percent."""
+
+    backlight = autoload()
+
+    try:
+        backlight.percent = percent
+    except ValueError:
+        # Compensate for possible minimal value.
+        backlight.raw = min(backlight.values)
+
+    if isinstance(backlight, LinuxBacklight):
+        method = 'Linux'
+    elif isinstance(backlight, I2CBacklight):
+        method = 'I2C / SMBUS'
+    else:
+        method = 'xrandr'
+
+    return Backlight(backlight.percent, method)
