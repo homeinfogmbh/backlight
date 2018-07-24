@@ -1,47 +1,11 @@
 """Dimming via i2c."""
 
-from pathlib import Path
-from subprocess import check_call, check_output
+from smbus import SMBus
 
 from backlight.api import DoesNotExist
 
 
-__all__ = ['i2cget', 'i2cset', 'I2CBacklight', 'ChrontelCH7511B']
-
-
-I2CGET = '/usr/bin/i2cget'
-I2CSET = '/usr/bin/i2cset'
-DEV_PATH = '/dev/i2c-{}'
-
-
-def i2cget(i2c_bus, chip_address, data_address=None, mode=None):
-    """Wrapper for i2cget."""
-
-    command = [I2CGET, '-y', str(i2c_bus), str(chip_address)]
-
-    if data_address is not None:
-        command.append(str(data_address))
-
-        if mode is not None:
-            command.append(str(mode))
-
-    return int(check_output(command).decode().strip(), 16)
-
-
-def i2cset(i2c_bus, chip_address, data_address, *values, mode=None):
-    """Wrapper for i2cget."""
-
-    command = [
-        I2CSET, '-y', str(i2c_bus), str(chip_address), str(data_address)]
-
-    if values:
-        for value in values:
-            command.append(str(value))
-
-        if mode is not None:
-            command.append(str(mode))
-
-    return check_call(command)
+__all__ = ['I2CBacklight', 'ChrontelCH7511B']
 
 
 class PercentageMap(dict):
@@ -76,18 +40,14 @@ class I2CBacklight:
 
     def __init__(self, i2c_bus, chip_address, offset, values):
         """Sets the respective I2C configuration."""
-        self.i2c_bus = i2c_bus
+        try:
+            self.smbus = SMBus(i2c_bus)
+        except FileNotFoundError:
+            raise DoesNotExist()
+
         self.chip_address = chip_address
         self.offset = offset
         self.values = values
-
-        if not self.device.exists():
-            raise DoesNotExist()
-
-    @property
-    def device(self):
-        """Returns the path to the device file."""
-        return Path(DEV_PATH.format(self.i2c_bus))
 
     @property
     def max(self):
@@ -97,13 +57,13 @@ class I2CBacklight:
     @property
     def raw(self):
         """Returns the raw set value."""
-        return i2cget(self.i2c_bus, self.chip_address, self.offset)
+        return self._read(self.offset)
 
     @raw.setter
     def raw(self, value):
         """Sets the raw value."""
         if value in self.values:
-            return i2cset(self.i2c_bus, self.chip_address, self.offset, value)
+            return self._write(self.offset, value)
 
         raise ValueError(value)
 
@@ -123,6 +83,16 @@ class I2CBacklight:
         else:
             raise ValueError(f'Invalid percentage: {percent}.')
 
+    def _read(self, address):
+        """Reads the respective address."""
+        return self.smbus.read_i2c_block_data(
+            self.chip_address, address, 1)[0]
+
+    def _write(self, address, value):
+        """Reads the respective address."""
+        return self.smbus.write_i2c_block_data(
+            self.chip_address, address, [value])[0]
+
 
 class ChrontelCH7511B(I2CBacklight):
     """Backlight API for Chrontel CH7511B."""
@@ -133,4 +103,4 @@ class ChrontelCH7511B(I2CBacklight):
         """Initializes the Chrontel CH7511B client."""
         super().__init__(i2c_bus, 0x21, 0x6E, self.__class__.VALUES)
         # Initialize duty cycle for PWM1.
-        i2cset(self.i2c_bus, self.chip_address, 0x7F, 0xED)
+        self._write(0x7F, 0xED)
