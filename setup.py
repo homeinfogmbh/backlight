@@ -10,7 +10,7 @@ setup(
     maintainer='Richard Neumann',
     maintainer_email='<r dot neumann at homeinfo priod de>',
     license='GPLv3',
-    packages=['backlight'],
+    packages=['backlight', 'backlight.api'],
     scripts=['files/backlight', 'files/backlightd'],
     data_files=[('/usr/share/licenses/backlight/', ['LICENSE'])],
     description='A screen backlight API and daemon.')
