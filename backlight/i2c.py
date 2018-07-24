@@ -1,5 +1,6 @@
 """Dimming via i2c."""
 
+from pathlib import Path
 from subprocess import check_call, check_output
 
 
@@ -8,6 +9,7 @@ __all__ = ['i2cget', 'i2cset', 'I2CBacklight', 'ChrontelCH7511B']
 
 I2CGET = '/usr/bin/i2cget'
 I2CSET = '/usr/bin/i2cset'
+DEV_PATH = '/dev/i2c-{}'
 
 
 def i2cget(i2c_bus, chip_address, data_address=None, mode=None):
@@ -76,6 +78,11 @@ class I2CBacklight:
         self.chip_address = chip_address
         self.offset = offset
         self.values = values
+
+    @property
+    def device(self):
+        """Returns the path to the device file."""
+        return Path(DEV_PATH.format(self.i2c_bus))
 
     @property
     def max(self):
