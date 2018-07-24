@@ -40,6 +40,33 @@ def i2cset(i2c_bus, chip_address, data_address, *values, mode=None):
     return check_call(command)
 
 
+class PercentageMap(dict):
+    """Range of brightness raw and percentage values."""
+
+    __slots__ = ()
+
+    def __init__(self, raw, percent=range(0, 101)):
+        """Sets raw and percentage ranges."""
+        super().__init__()
+        raw_span = max(raw) - min(raw)
+        percent_span = max(percent) - min(percent)
+        percent_step = percent_span / raw_span
+        percentage = min(percent)
+
+        for raw_value in raw:
+            next_percentage = round(percentage + percent_step)
+            self[raw_value] = range(percentage, next_percentage)
+            percentage = next_percentage
+
+    def from_percent(self, percentage):
+        """Returns the raw value for the given percentage."""
+        for raw, percent in self.items():
+            if percentage in percent:
+                return raw
+
+        raise KeyError(percentage)
+
+
 class I2CBacklight:
     """Dimming by I2C / SMBUS."""
 
@@ -52,42 +79,35 @@ class I2CBacklight:
 
     @property
     def max(self):
-        """Returns the maximum value."""
-        return self.values[-1]
+        """Returns the maximum raw value."""
+        return max(self.values)
 
     @property
     def raw(self):
         """Returns the raw set value."""
-        return i2cget(
-            self.i2c_bus, self.chip_address, data_address=self.offset)
+        return i2cget(self.i2c_bus, self.chip_address, self.offset)
 
     @raw.setter
     def raw(self, value):
         """Sets the raw value."""
         if value in self.values:
-            return i2cset(
-                self.i2c_bus, self.chip_address, self.offset, value)
+            return i2cset(self.i2c_bus, self.chip_address, self.offset, value)
 
         raise ValueError(value)
 
     value = raw
 
     @property
-    def factor(self):
-        """Percentage factor."""
-        return 100 / (len(self.values) - 1)
-
-    @property
     def percent(self):
         """Returns the current brightness in percent."""
-        return round(self.raw * self.factor)
+        range_ = self.values[self.raw]
+        return sum(range_) / len(range_)
 
     @percent.setter
     def percent(self, percent):
         """Returns the current brightness in percent."""
         if 0 <= percent <= 100:
-            value = round(percent * self.max / 100)
-            self.raw = max(min(self.values), value)
+            self.raw = self.values.from_percent(percent)
         else:
             raise ValueError(f'Invalid percentage: {percent}.')
 
@@ -95,8 +115,10 @@ class I2CBacklight:
 class ChrontelCH7511B(I2CBacklight):
     """Backlight API for Chrontel CH7511B."""
 
+    VALUES = PercentageMap(range(1, 18), range(30, 100))
+
     def __init__(self, i2c_bus=0):
         """Initializes the Chrontel CH7511B client."""
-        super().__init__(i2c_bus, 0x21, 0x6E, range(1, 18))
+        super().__init__(i2c_bus, 0x21, 0x6E, self.__class__.VALUES)
         # Initialize duty cycle for PWM1.
         i2cset(self.i2c_bus, self.chip_address, 0x7F, 0xED)
