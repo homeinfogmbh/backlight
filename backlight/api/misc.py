@@ -56,7 +56,7 @@ def brightness(percent):
     if isinstance(backlight, LinuxBacklight):
         method = 'Linux'
     elif isinstance(backlight, I2CBacklight):
-        method = 'I2C / SMBUS'
+        method = 'I2C / SMBus'
     else:
         method = 'xrandr'
 
