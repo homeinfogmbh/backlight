@@ -44,7 +44,7 @@ def _get_brightness(display):
             if key == 'Brightness:' and output == active_output:
                 return (output, float(value))
         else:
-            output, _ = line.split(maxsplit=1)
+            output, *_ = line.split(maxsplit=1)
 
     return None
 
