@@ -1,5 +1,6 @@
 """Backlight setting via xrandr."""
 
+from contextlib import suppress
 from os import environ
 from subprocess import check_output
 
@@ -44,7 +45,8 @@ def _get_brightness(display):
             if key == 'Brightness:' and output == active_output:
                 return (output, float(value))
         else:
-            output, *_ = line.split(maxsplit=1)
+            with suppress(ValueError):
+                output, *_ = line.split(maxsplit=1)
 
     return None
 
