@@ -16,8 +16,12 @@
 #  along with this program. If not, see <http://www.gnu.org/licenses/>.
 """A linux screen backlight API, cli program and daemon."""
 
-from backlight.api import DoesNotExist, DoesNotSupportAPI, \
-    NoSupportedGraphicsCards, load, autoload, brightness
+from backlight.api import DoesNotExist
+from backlight.api import DoesNotSupportAPI
+from backlight.api import NoSupportedGraphicsCards
+from backlight.api import autoload
+from backlight.api import brightness
+from backlight.api import load
 from backlight.cli import CLI
 from backlight.daemon import Daemon
 

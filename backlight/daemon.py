@@ -21,6 +21,7 @@ from json import load
 from time import sleep
 
 from backlight.api import NoSupportedGraphicsCards, load as load_backlight
+from backlight.api.exceptions import NoLatestEntry
 from backlight.cli import docopt, error, log
 
 
@@ -37,14 +38,6 @@ __all__ = [
 
 TIME_FORMAT = '%H:%M'
 DEFAULT_CONFIG = '/etc/backlight.json'
-
-
-class NoLatestEntry(Exception):
-    """Indicates that no latest entry could
-    be determined from the configuration.
-    """
-
-    pass
 
 
 def stripped_datetime(date_time=None):

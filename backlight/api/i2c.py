@@ -1,9 +1,23 @@
+# This file is part of backlight.
+#
+# backlight is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# backlight is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with backlight.  If not, see <http://www.gnu.org/licenses/>.
 """Dimming via i2c."""
 
 from hashlib import sha1
 from subprocess import check_output
 
-from smbus import SMBus
+from smbus import SMBus     # pylint: disable=E0611
 
 from backlight.api.exceptions import DoesNotExist
 
@@ -17,7 +31,7 @@ __all__ = [
 
 
 def syshash():
-    """Returns hashed lspci data."""
+    """Returns hashed PCI and CPU data."""
 
     hasher = sha1()
     lspci = check_output('/usr/bin/lspci')
@@ -118,9 +132,8 @@ class ChrontelCH7511B(I2CBacklight):
 
     def __init__(self, i2c_bus=0):
         """Initializes the Chrontel CH7511B client."""
-        super().__init__(i2c_bus, 0x21, 0x6E, self.__class__.VALUES)
-        # Initialize duty cycle for PWM1.
-        self._write(0x7F, 0xED)
+        super().__init__(i2c_bus, 0x21, 0x6E, type(self).VALUES)
+        self._write(0x7F, 0xED)     # Initialize duty cycle for PWM1.
 
 
 I2C_CARDS = {'53af5eabb6e32c257237ff18b3f047e9fa5e42fd': ChrontelCH7511B}
