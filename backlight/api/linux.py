@@ -23,8 +23,9 @@ in the respective folder.
 from contextlib import suppress
 from pathlib import Path
 
-from backlight.api.exceptions import DoesNotExist, DoesNotSupportAPI, \
-    NoSupportedGraphicsCards
+from backlight.api.exceptions import DoesNotExist
+from backlight.api.exceptions import DoesNotSupportAPI
+from backlight.api.exceptions import NoSupportedGraphicsCards
 
 
 __all__ = ['LinuxBacklight']
@@ -52,11 +53,8 @@ class LinuxBacklight:
 
     @classmethod
     def any(cls):
-        """Loads the backlight from the respective graphics cards.
-
-        If no graphics cards have been defined, seek BASEDIR for
-        available graphics card and return backlight for the first
-        graphics card that implements the API.
+        """Seeks BASEDIR for available graphics card and returns
+        backlight for the first graphics card that implements the API.
         """
         for graphics_card in BASEDIR.iterdir():
             with suppress(DoesNotExist, DoesNotSupportAPI):
@@ -94,19 +92,19 @@ class LinuxBacklight:
     @property
     def max(self):
         """Returns the maximum brightness as integer."""
-        with open(self._max_file, 'r') as file:
+        with self._max_file.open('r') as file:
             return int(file.read().strip())
 
     @property
     def raw(self):
         """Returns the raw brightness."""
-        with open(self._getter_file, 'r') as file:
+        with self._getter_file.open('r') as file:
             return int(file.read().strip())
 
     @raw.setter
     def raw(self, brightness):
         """Sets the raw brightness."""
-        with open(self._setter_file, 'w') as file:
+        with self._setter_file.open('w') as file:
             file.write(f'{brightness}\n')
 
     @property

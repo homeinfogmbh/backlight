@@ -29,7 +29,7 @@ __all__ = ['load', 'autoload', 'brightness']
 Backlight = namedtuple('Backlight', ('percent', 'method'))
 
 
-def load(name):
+def load(name=None):
     """Loads the backlight by the respective names."""
 
     if name is None:

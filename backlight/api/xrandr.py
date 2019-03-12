@@ -27,11 +27,24 @@ __all__ = ['Xrandr']
 XRANDR = '/usr/bin/xrandr'
 
 
-def _xrandr(display, *options):
+def _xrandr(display, verbose=False, output=None, brightness=None):
     """Runs the respective xrandr command."""
 
+    command = [XRANDR]
+
+    if verbose:
+        command.append('--verbose')
+
+    if output is not None:
+        command.append('--output')
+        command.append(output)
+
+    if brightness is not None:
+        command.append('--brightness')
+        command.append(brightness)
+
     with Display(display):
-        return check_output((XRANDR,) + options).decode()
+        return check_output(command).decode()
 
 
 def _get_output(display):
@@ -52,7 +65,7 @@ def _get_brightness(display):
     active_output = _get_output(display)
     output = None
 
-    for line in _xrandr(display, '--verbose').split('\n'):
+    for line in _xrandr(display, verbose=True).split('\n'):
         if line.startswith(' '):
             key, value = line.split(maxsplit=1)
 
@@ -95,9 +108,8 @@ class Xrandr:
     @raw.setter
     def raw(self, value):
         """Sets the raw value."""
-        _xrandr(
-            self.display, '--output', _get_output(self.display),
-            '--brightness', str(value))
+        output = _get_output(self.display)
+        _xrandr(self.display, output=output, brightness=str(value))
 
     @property
     def percent(self):

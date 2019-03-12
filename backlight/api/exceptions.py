@@ -26,32 +26,22 @@ __all__ = [
 class DoesNotExist(Exception):
     """Indicates that the respective graphics card does not exist."""
 
-    pass    # pylint: disable=W0107
-
 
 class DoesNotSupportAPI(Exception):
     """Indicates that the respective graphics
     card does not implement this API.
     """
 
-    pass    # pylint: disable=W0107
-
 
 class NoOutputFound(Exception):
     """Indicates that no output could be determined."""
 
-    pass    # pylint: disable=W0107
-
 
 class NoSupportedGraphicsCards(Exception):
     """Indicates that the available graphics cards are not supported."""
-
-    pass    # pylint: disable=W0107
 
 
 class NoLatestEntry(Exception):
     """Indicates that no latest entry could
     be determined from the configuration.
     """
-
-    pass    # pylint: disable=W0107
