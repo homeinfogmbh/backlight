@@ -67,12 +67,16 @@ def _get_brightness(display):
 
     for line in _xrandr(display, verbose=True).split('\n'):
         if line.startswith(' '):
-            key, value = line.split(':', maxsplit=1)
+            try:
+                key, value = line.split(':', maxsplit=1)
+            except ValueError:
+                continue
+
             key = key.strip()
             value = value.strip()
 
             if key == 'Brightness' and output == active_output:
-                return (output, float(value))
+                return float(value)
         else:
             with suppress(ValueError):
                 output, _ = line.split(maxsplit=1)
