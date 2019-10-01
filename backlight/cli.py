@@ -32,7 +32,8 @@ def get_args():
     parser.add_argument(
         '--max', action='store_true', help='returns the maximum raw value')
     parser.add_argument('--graphics-card', help='specifies the graphics card')
-    parser.add_argument('--raw', help='work with raw values')
+    parser.add_argument(
+        '--raw', action='store_true', help='work with raw values')
     return parser.parse_args()
 
 
