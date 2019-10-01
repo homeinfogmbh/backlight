@@ -137,4 +137,4 @@ class ChrontelCH7511B(I2CBacklight):
         self._write(0x7F, 0xED)     # Initialize duty cycle for PWM1.
 
 
-I2C_CARDS = {'53af5eabb6e32c257237ff18b3f047e9fa5e42fd': ChrontelCH7511B()}
+I2C_CARDS = {'53af5eabb6e32c257237ff18b3f047e9fa5e42fd': ChrontelCH7511B}

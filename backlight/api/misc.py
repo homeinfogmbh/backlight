@@ -34,8 +34,8 @@ def load(name=None):
 
     if name is None:
         try:
-            return I2C_CARDS[syshash()]
-        except KeyError:
+            return I2C_CARDS[syshash()]()
+        except (KeyError, DoesNotExist):
             return LinuxBacklight.any()
 
     return LinuxBacklight(name)
