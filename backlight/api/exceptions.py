@@ -20,7 +20,8 @@ __all__ = [
     'DoesNotSupportAPI',
     'NoOutputFound',
     'NoSupportedGraphicsCards',
-    'NoLatestEntry']
+    'NoLatestEntry'
+]
 
 
 class DoesNotExist(Exception):

@@ -15,14 +15,16 @@
 """A daemon to update the screen's backlight brightness
 at given timestamps to the respective value.
 """
+from argparse import ArgumentParser
 from contextlib import suppress
 from datetime import datetime
 from json import load
+from logging import DEBUG, INFO, basicConfig, getLogger
+from pathlib import Path
 from time import sleep
 
 from backlight.api import NoSupportedGraphicsCards, load as load_backlight
 from backlight.api.exceptions import NoLatestEntry
-from backlight.cli import docopt, error, log
 
 
 __all__ = [
@@ -33,11 +35,14 @@ __all__ = [
     'load_config',
     'parse_config',
     'get_latest',
-    'Daemon']
+    'Daemon'
+]
 
 
+DEFAULT_CONFIG = Path('/etc/backlight.json')
+LOG_FORMAT = '[%(levelname)s] %(name)s: %(message)s'
+LOGGER = getLogger('backlightd')
 TIME_FORMAT = '%H:%M'
-DEFAULT_CONFIG = '/etc/backlight.json'
 
 
 def stripped_datetime(date_time=None):
@@ -53,14 +58,14 @@ def load_config(path):
     """Loads the configuration"""
 
     try:
-        with open(path, 'r') as config_file:
+        with path.open('r') as config_file:
             return load(config_file)
     except PermissionError:
-        error(f'Cannot read config file: {path}.')
+        LOGGER.error('Cannot read config file: %s.', path)
     except FileNotFoundError:
-        error(f'Config file does not exist: {path}.')
+        LOGGER.error('Config file does not exist: %s.', path)
     except ValueError:
-        error(f'Config file has invalid content: {path}.')
+        LOGGER.error('Config file has invalid content: %s.', path)
 
     return {}
 
@@ -72,7 +77,7 @@ def parse_config(config):
         try:
             timestamp = datetime.strptime(timestamp, TIME_FORMAT).time()
         except ValueError:
-            error(f'Invalid timestamp "{timestamp}".')
+            LOGGER.error('Invalid timestamp "%s".', timestamp)
             continue
         else:
             timestamp = timestamp.strftime(TIME_FORMAT)
@@ -80,12 +85,14 @@ def parse_config(config):
         try:
             brightness = int(brightness)
         except (TypeError, ValueError):
-            error(f'Invalid brightness "{brightness}" at {timestamp}.')
+            LOGGER.error('Invalid brightness "%s".', brightness)
+            LOGGER.debug('At "%s".', timestamp)
         else:
             if 0 <= brightness <= 100:
                 yield (timestamp, brightness)
             else:
-                error(f'Invalid percentage: {brightness} at {timestamp}.')
+                LOGGER.error('Invalid percentage "%s".', brightness)
+                LOGGER.debug('At "%s".', timestamp)
 
 
 def get_latest(config):
@@ -113,22 +120,29 @@ def get_latest(config):
     return latest
 
 
+def get_args():
+    """Parses the command line arguments."""
+
+    parser = ArgumentParser(description='A screen backlight daemon.')
+    parser.add_argument('graphics_card', nargs='?')
+    parser.add_argument(
+        '-c', '--config', metavar='config_file', type=Path,
+        default=DEFAULT_CONFIG, help='sets the JSON configuration file')
+    parser.add_argument(
+        '-t', '--tick', metavar='seconds', type=float, default=1,
+        help="sets the daemon's interval")
+    parser.add_argument(
+        '-r', '--reset', action='store_true',
+        help='reset the brightness before terminating')
+    parser.add_argument(
+        '-v', '--verbose', action='store_true', help='turn on verbose logging')
+    return parser.parse_args()
+
+
 class Daemon:
-    """backlightd
+    """A screen backlight daemon."""
 
-A screen backlight daemon.
-
-Usage:
-    backlightd [<graphics_card>] [options]
-
-Options:
-    --config=<config_file>, -c  Sets the JSON configuration file.
-    --tick=<seconds>, -t        Sets the daemon's interval [default: 1].
-    --reset, -r                 Reset the brightness before terminating.
-    --help                      Shows this page.
-"""
-
-    def __init__(self, backlight, config_file, reset=False, tick=1):
+    def __init__(self, backlight, config, reset=False, tick=1):
         """Tries the specified graphics cards until
         a working one is found.
 
@@ -136,7 +150,7 @@ Options:
         within BASEDIR until a working one is found.
         """
         self._backlight = backlight
-        self.config = dict(parse_config(load_config(config_file)))
+        self.config = config
         self.reset = reset
         self.tick = tick
         self._initial_brightness = self.brightness
@@ -145,17 +159,15 @@ Options:
     @classmethod
     def run(cls):
         """Runs as a daemon."""
-        options = docopt(cls.__doc__)
-        graphics_card = options['<graphics_card>']
-        backlight = load_backlight(graphics_card)
-        config_file = options['--config'] or DEFAULT_CONFIG
-        tick = int(options['--tick'])
-        reset = options['--reset']
+        args = get_args()
+        basicConfig(level=DEBUG if args.debug else INFO, format=LOG_FORMAT)
+        backlight = load_backlight(args.graphics_card)
+        config = dict(parse_config(load_config(args.config_file)))
 
         try:
-            daemon = cls(backlight, config_file, reset=reset, tick=tick)
+            daemon = cls(backlight, config, reset=args.reset, tick=args.tick)
         except NoSupportedGraphicsCards:
-            error('No supported graphics cards found.')
+            LOGGER.error('No supported graphics cards found.')
             return 3
 
         if daemon.spawn():
@@ -174,36 +186,37 @@ Options:
         try:
             self._backlight.percent = percent
         except ValueError:
-            error(f'Invalid brightness: {percent}.')
+            LOGGER.error('Invalid brightness: %s.', percent)
         except PermissionError:
-            error('Cannot set brightness. Is this service running as root?')
+            LOGGER.error('Cannot set brightness.')
+            LOGGER.info('Is this service running as root?')
         else:
-            log(f'Set brightness to {percent}%.')
+            LOGGER.info('Set brightness to %s%%.', percent)
 
     def _startup(self):
         """Starts up the daemon."""
-        log('Starting up...')
-        log(f'Tick is {self.tick} second(s).')
-        log(f'Detected graphics card: {self._backlight}.')
-        log(f'Initial brightness is {self._initial_brightness}%.')
+        LOGGER.info('Starting up...')
+        LOGGER.info('Tick is %s second(s).', self.tick)
+        LOGGER.info('Detected graphics card: %s.', self._backlight)
+        LOGGER.info('Initial brightness is %s%%.', self._initial_brightness)
 
         try:
             timestamp, self.brightness = get_latest(self.config)
         except NoLatestEntry:
-            error('Latest entry could not be determined.')
-            error('Falling back to 100%.')
+            LOGGER.error('Latest entry could not be determined.')
+            LOGGER.error('Falling back to 100%.')
             self.brightness = 100
         else:
             timestamp = timestamp.strftime(TIME_FORMAT)
-            log(f'Loaded latest setting from {timestamp}.')
+            LOGGER.info('Loaded latest setting from %s.', timestamp)
 
     def _shutdown(self):
         """Performs shutdown tasks."""
         if self.reset:
-            log('Resetting brightness...')
+            LOGGER.info('Resetting brightness...')
             self.brightness = self._initial_brightness
 
-        log('Terminating...')
+        LOGGER.info('Terminating...')
         return True
 
     def spawn(self):

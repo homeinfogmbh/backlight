@@ -15,131 +15,82 @@
 """A command line interface program to read
 and set the screen's backlight brightnesss.
 """
-from sys import stderr, exit as exit_
+from argparse import ArgumentParser
+from sys import stderr
 
-try:
-    from docopt import docopt
-except ImportError:
-    def docopt(_):
-        """Docopt mockup to fail if invoked."""
-        print('WARNING: "docopt" not installed.', file=stderr, flush=True)
-        print('Daemon and CLI unavailable.', file=stderr, flush=True)
-        exit_(5)
-
-from backlight.api import NoSupportedGraphicsCards, load
+from backlight.api import NoSupportedGraphicsCards, load, IntegerDifferential
 
 
-__all__ = ['error', 'log', 'CLI']
+__all__ = ['main']
 
 
-def error(*msgs):
-    """Logs error messages."""
+def get_args():
+    """Parses the command line arguments."""
 
-    print(*msgs, file=stderr, flush=True)
+    parser = ArgumentParser(description='A screen backlight CLI interface.')
+    parser.add_argument('value', type=IntegerDifferential, nargs='?')
+    parser.add_argument(
+        '--max', action='store_true', help='returns the maximum raw value')
+    parser.add_argument('--graphics-card', help='specifies the graphics card')
+    parser.add_argument('--raw', help='work with raw values')
+    return parser.parse_args()
 
 
-def log(*msgs):
-    """Logs informational messages."""
+def set_brightness(graphics_card, value, raw):
+    """Sets the brightness."""
 
-    print(*msgs, flush=True)
+    if raw:
+        if value.increase:
+            value = min(graphics_card.max, graphics_card.raw + value)
+        elif value.decrease:
+            value = max(0, graphics_card.raw - value)
+
+        graphics_card.raw = value
+    else:
+        if value.increase:
+            value = min(100, graphics_card.percent + value)
+        elif value.decrease:
+            value = max(0, graphics_card.percent - value)
+
+        graphics_card.percent = value
 
 
-class CLI:
-    """backlight.
+def main():
+    """Runs as CLI program."""
 
-A screen backlight CLI interface.
+    args = get_args()
 
-Usage:
-    backlight [<value>] [options]
+    try:
+        graphics_card = load(args.graphics_card)
+    except NoSupportedGraphicsCards:
+        print('No supported graphics cards found.', file=stderr, flush=True)
+        return 3
 
-Options:
-    --increase                        Increase current value by the given \
-value.
-    --decrease                        Decrease current value by the given \
-value.
-    --graphics-card=<graphics_card>   Sets the desired graphics card.
-    --raw                             Work with raw values instead of percent.
-    --max                             Returns the maximum raw backlight value.
-    --help                            Shows this page.
-"""
+    if args.max:
+        print(graphics_card.max)
+        return 0
 
-    def __init__(self, backlight):
-        """Sets the backlight instance."""
-        self._backlight = backlight
-
-    @classmethod
-    def run(cls):
-        """Runs as CLI program."""
-        options = docopt(cls.__doc__)
-        graphics_card = options['--graphics-card']
-
-        try:
-            cli = cls(load(graphics_card))
-        except NoSupportedGraphicsCards:
-            error('No supported graphics cards found.')
-            return 3
-
-        value = options['<value>']
-
-        if value:
-            try:
-                value = int(value)
-            except ValueError:
-                error('Value must be an integer.')
-                return 2
-
-            return cli.set_brightness(
-                value, raw=options['--raw'],
-                increase=options['--increase'],
-                decrease=options['--decrease'])
-
-        return cli.print_brightness(
-            raw=options['--raw'], maximum=options['--max'])
-
-    def print_brightness(self, raw=False, maximum=False):
-        """Returns the current backlight brightness."""
-        if maximum:
-            print(self._backlight.max)
+    if args.value is None:
+        if args.raw:
+            print(graphics_card.raw, flush=True)
         else:
-            print(self._backlight.raw if raw else self._backlight.percent)
+            print(graphics_card.percent, flush=True)
 
         return 0
 
-    def set_brightness(self, value, raw=False, increase=False, decrease=False):
-        """Seths the backlight brightness."""
-        if increase and decrease:
-            error('Increase and decrease are mutually exclusive.')
-            return 4
+    try:
+        set_brightness(graphics_card, args.value, args.raw)
+    except ValueError:
+        print(f'Invalid percentage: {args.value}.', file=stderr, flush=True)
+        retval = 1
+    except PermissionError:
+        print('Cannot set brightness. Try running as root.', file=stderr,
+              flush=True)
+        retval = 4
+    except OSError:
+        print(f'Invalid brightness: {args.value}.', file=stderr, flush=True)
+        retval = 1
+    else:
+        retval = 0
 
-        if raw:
-            if increase:
-                value = min(self._backlight.max, self._backlight.raw + value)
-            elif decrease:
-                value = max(0, self._backlight.raw - value)
-
-            try:
-                self._backlight.raw = value
-            except PermissionError:
-                error('Cannot set brightness. Try running as root.')
-                return 4
-            except OSError:
-                error(f'Invalid brightness: {value}.')
-                return 1
-        else:
-            if increase:
-                value = min(100, self._backlight.percent + value)
-            elif decrease:
-                value = max(0, self._backlight.percent - value)
-
-            try:
-                self._backlight.percent = value
-            except ValueError:
-                error('Percentage must be an integer.')
-                return 2
-
-            try:
-                self._backlight.percent = value
-            except ValueError:
-                error(f'Invalid percentage: {value}.')
-
-        return 0
+    return retval

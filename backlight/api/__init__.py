@@ -14,6 +14,7 @@
 # along with backlight.  If not, see <http://www.gnu.org/licenses/>.
 """Backlight API."""
 
+from backlight.api.datastructures import IntegerDifferential
 from backlight.api.exceptions import DoesNotExist
 from backlight.api.exceptions import DoesNotSupportAPI
 from backlight.api.exceptions import NoSupportedGraphicsCards
@@ -30,6 +31,8 @@ __all__ = [
     'load',
     'autoload',
     'brightness',
+    'IntegerDifferential',
     'I2CBacklight',
     'ChrontelCH7511B',
-    'LinuxBacklight']
+    'LinuxBacklight'
+]

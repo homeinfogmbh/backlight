@@ -27,7 +27,8 @@ __all__ = [
     'PercentageMap',
     'I2CBacklight',
     'ChrontelCH7511B',
-    'I2C_CARDS']
+    'I2C_CARDS'
+]
 
 
 def syshash():

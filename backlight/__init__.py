@@ -22,7 +22,7 @@ from backlight.api import NoSupportedGraphicsCards
 from backlight.api import autoload
 from backlight.api import brightness
 from backlight.api import load
-from backlight.cli import CLI
+from backlight.cli import main
 from backlight.daemon import Daemon
 
 __all__ = [
@@ -32,5 +32,6 @@ __all__ = [
     'load',
     'autoload',
     'brightness',
-    'CLI',
-    'Daemon']
+    'main',
+    'Daemon'
+]

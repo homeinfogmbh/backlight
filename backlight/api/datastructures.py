@@ -1,4 +1,3 @@
-#! /usr/bin/env python3
 # This file is part of backlight.
 #
 # backlight is free software: you can redistribute it and/or modify
@@ -13,12 +12,25 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with backlight.  If not, see <http://www.gnu.org/licenses/>.
-"""Runs the backlight CLI."""
-
-from sys import exit    # pylint: disable=W0622
-
-from backlight import main  # pylint: disable=W0406
+"""Custom data structures."""
 
 
-if __name__ == '__main__':
-    exit(main())
+__all__ = ['IntegerDifferential']
+
+
+class IntegerDifferential(int):
+    """An optionally signed integer."""
+
+    def __new__(cls, value):
+        if isinstance(value, str):
+            value = value.strip()
+            increase = value.startswith('+')
+            decrease = value.startswith('-')
+        else:
+            increase = None
+            decrease = None
+
+        instance = super().__new__(cls, value)
+        instance.increase = increase
+        instance.decrease = decrease
+        return instance
