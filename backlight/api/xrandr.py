@@ -52,7 +52,8 @@ def _get_output(display):
 
     for line in _xrandr(display).split('\n'):
         if 'connected' in line:
-            output, state, _ = line.split(maxsplit=2)
+            output, state = line.split(maxsplit=1)
+
             if state == 'connected':
                 return output
 
@@ -72,9 +73,7 @@ def _get_brightness(display):
             except ValueError:
                 continue
 
-            key = key.strip()
-
-            if key == 'Brightness':
+            if key.strip() == 'Brightness':
                 return float(value.strip())
         else:
             with suppress(ValueError):
@@ -88,14 +87,27 @@ class Display(int):
     DISPLAY environment variable.
     """
 
+    def __init__(self, *_):
+        """Sets the previous display."""
+        super().__init__()
+        self._previous = None
+
     def __str__(self):
+        """Returns a colon, followed by the display ID."""
         return f':{int(self)}'
 
     def __enter__(self):
-        environ['DISPLAY'] = str(self)
+        """Stores the previously set display and sets the
+        DISPLAY environment variable to the current display.
+        """
+        self._previous, environ['DISPLAY'] = environ.get('DISPLAY'), str(self)
 
     def __exit__(self, *_):
-        del environ['DISPLAY']
+        """Resets the DISPLAY environment variable."""
+        if self._previous is None:
+            del environ['DISPLAY']
+        else:
+            environ['DISPLAY'] = self._previous
 
 
 class Xrandr:
