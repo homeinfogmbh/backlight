@@ -52,7 +52,7 @@ def _get_output(display):
 
     for line in _xrandr(display).split('\n'):
         if 'connected' in line:
-            output, state = line.split(maxsplit=1)
+            output, state, *_ = line.split()
 
             if state == 'connected':
                 return output
