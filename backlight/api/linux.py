@@ -1,17 +1,3 @@
-# This file is part of backlight.
-#
-# backlight is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# backlight is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with backlight.  If not, see <http://www.gnu.org/licenses/>.
 """This module provides an API to retrieve and set the backlight
 brightness of screens."
 
@@ -23,9 +9,9 @@ in the respective folder.
 from contextlib import suppress
 from pathlib import Path
 
-from backlight.api.exceptions import DoesNotExist
-from backlight.api.exceptions import DoesNotSupportAPI
-from backlight.api.exceptions import NoSupportedGraphicsCards
+from backlight.exceptions import DoesNotExist
+from backlight.exceptions import DoesNotSupportAPI
+from backlight.exceptions import NoSupportedGraphicsCards
 
 
 __all__ = ['LinuxBacklight']
@@ -37,7 +23,7 @@ BASEDIR = Path('/sys/class/backlight')
 class LinuxBacklight:
     """Backlight handler for graphics cards."""
 
-    def __init__(self, graphics_card):
+    def __init__(self, graphics_card: str):
         """Sets the respective graphics card."""
         self._graphics_card = graphics_card
 

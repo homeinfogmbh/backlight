@@ -1,24 +1,10 @@
-# This file is part of backlight.
-#
-# backlight is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# backlight is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with backlight.  If not, see <http://www.gnu.org/licenses/>.
 """Backlight setting via xrandr."""
 
 from contextlib import suppress
 from os import environ
 from subprocess import check_output
 
-from backlight.api.exceptions import NoOutputFound
+from backlight.exceptions import NoOutputFound
 
 
 __all__ = ['Xrandr']
@@ -27,7 +13,8 @@ __all__ = ['Xrandr']
 XRANDR = '/usr/bin/xrandr'
 
 
-def _xrandr(display, verbose=False, output=None, brightness=None):
+def _xrandr(display: int, verbose: bool = False, output: str = None,
+            brightness: int = None) -> str:
     """Runs the respective xrandr command."""
 
     command = [XRANDR]
@@ -44,10 +31,10 @@ def _xrandr(display, verbose=False, output=None, brightness=None):
         command.append(brightness)
 
     with Display(display):
-        return check_output(command).decode()
+        return check_output(command, text=True)
 
 
-def _get_output(display):
+def _get_output(display: int) -> str:
     """Determines the active output."""
 
     for line in _xrandr(display).split('\n'):
@@ -60,7 +47,7 @@ def _get_output(display):
     raise NoOutputFound()
 
 
-def _get_brightness(display):
+def _get_brightness(display: int) -> float:
     """Determines the active output."""
 
     active_output = _get_output(display)
@@ -113,7 +100,7 @@ class Display(int):
 class Xrandr:
     """Backlight client using xrandr."""
 
-    def __init__(self, display=0):
+    def __init__(self, display: int = 0):
         """Sets the display to use."""
         self.display = display
 

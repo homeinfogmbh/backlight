@@ -1,29 +1,16 @@
-#  backlight
-#
-#  Copyright (C) 2017  HOMEINFO - Digitale Informationssysteme GmbH
-#
-#  This program is free software: you can redistribute it and/or modify
-#  it under the terms of the GNU General Public License as published by
-#  the Free Software Foundation, either version 3 of the License, or
-#  (at your option) any later version.
-#
-#  This program is distributed in the hope that it will be useful,
-#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#  GNU General Public License for more details.
-#
-#  You should have received a copy of the GNU General Public License
-#  along with this program. If not, see <http://www.gnu.org/licenses/>.
 """A linux screen backlight API, cli program and daemon."""
 
-from backlight.api import DoesNotExist
-from backlight.api import DoesNotSupportAPI
-from backlight.api import NoSupportedGraphicsCards
+from backlight.api import GraphicsCard
 from backlight.api import autoload
 from backlight.api import brightness
 from backlight.api import load
 from backlight.cli import main
 from backlight.daemon import Daemon
+from backlight.exceptions import DoesNotExist
+from backlight.exceptions import DoesNotSupportAPI
+from backlight.exceptions import NoSupportedGraphicsCards
+from backlight.types import Backlight
+
 
 __all__ = [
     'DoesNotExist',
@@ -33,5 +20,7 @@ __all__ = [
     'autoload',
     'brightness',
     'main',
-    'Daemon'
+    'Daemon',
+    'Backlight',
+    'GraphicsCard'
 ]

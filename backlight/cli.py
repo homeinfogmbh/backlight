@@ -1,30 +1,18 @@
-# This file is part of backlight.
-#
-# backlight is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# backlight is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with backlight.  If not, see <http://www.gnu.org/licenses/>.
 """A command line interface program to read
 and set the screen's backlight brightnesss.
 """
-from argparse import ArgumentParser
+from argparse import ArgumentParser, Namespace
 from sys import stderr
 
-from backlight.api import NoSupportedGraphicsCards, load, IntegerDifferential
+from backlight.api import load, GraphicsCard
+from backlight.exceptions import NoSupportedGraphicsCards
+from backlight.types import IntegerDifferential
 
 
 __all__ = ['main']
 
 
-def get_args():
+def get_args() -> Namespace:
     """Parses the command line arguments."""
 
     parser = ArgumentParser(description='A screen backlight CLI interface.')
@@ -37,7 +25,8 @@ def get_args():
     return parser.parse_args()
 
 
-def set_brightness(graphics_card, value, raw):
+def set_brightness(graphics_card: GraphicsCard, value: IntegerDifferential,
+                   raw: bool):
     """Sets the brightness."""
 
     if raw:
@@ -56,7 +45,7 @@ def set_brightness(graphics_card, value, raw):
         graphics_card.percent = value
 
 
-def main():
+def main() -> int:
     """Runs as CLI program."""
 
     args = get_args()

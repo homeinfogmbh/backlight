@@ -1,30 +1,18 @@
-# This file is part of backlight.
-#
-# backlight is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# backlight is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with backlight.  If not, see <http://www.gnu.org/licenses/>.
 """A daemon to update the screen's backlight brightness
 at given timestamps to the respective value.
 """
-from argparse import ArgumentParser
+from argparse import ArgumentParser, Namespace
 from contextlib import suppress
 from datetime import datetime
 from json import load
 from logging import DEBUG, INFO, basicConfig, getLogger
 from pathlib import Path
 from time import sleep
+from typing import Iterable
 
-from backlight.api import NoSupportedGraphicsCards, load as load_backlight
-from backlight.api.exceptions import NoLatestEntry
+from backlight.api import load as load_backlight, GraphicsCard
+from backlight.types import TimedBrightness
+from backlight.exceptions import NoLatestEntry, NoSupportedGraphicsCards
 
 
 __all__ = [
@@ -45,16 +33,16 @@ LOGGER = getLogger('backlightd')
 TIME_FORMAT = '%H:%M'
 
 
-def stripped_datetime(date_time=None):
+def stripped_datetime(timestamp: datetime  = None) -> datetime:
     """Gets current date time, exact to minute."""
 
-    date_time = date_time or datetime.now()
+    timestamp = timestamp or datetime.now()
     return datetime(
-        year=date_time.year, month=date_time.month, day=date_time.day,
-        hour=date_time.hour, minute=date_time.minute)
+        year=timestamp.year, month=timestamp.month, day=timestamp.day,
+        hour=timestamp.hour, minute=timestamp.minute)
 
 
-def load_config(path):
+def load_config(path: Path) -> dict:
     """Loads the configuration"""
 
     try:
@@ -70,7 +58,7 @@ def load_config(path):
     return {}
 
 
-def parse_config(config):
+def parse_config(config: dict) -> Iterable[TimedBrightness]:
     """Parses the configuration dictionary."""
 
     for timestamp, brightness in config.items():
@@ -79,23 +67,24 @@ def parse_config(config):
         except ValueError:
             LOGGER.error('Invalid timestamp "%s".', timestamp)
             continue
-        else:
-            timestamp = timestamp.strftime(TIME_FORMAT)
+
+        timestamp = timestamp.strftime(TIME_FORMAT)
 
         try:
             brightness = int(brightness)
         except (TypeError, ValueError):
             LOGGER.error('Invalid brightness "%s".', brightness)
             LOGGER.debug('At "%s".', timestamp)
+            continue
+
+        if 0 <= brightness <= 100:
+            yield TimedBrightness(timestamp, brightness)
         else:
-            if 0 <= brightness <= 100:
-                yield (timestamp, brightness)
-            else:
-                LOGGER.error('Invalid percentage "%s".', brightness)
-                LOGGER.debug('At "%s".', timestamp)
+            LOGGER.error('Invalid percentage "%s".', brightness)
+            LOGGER.debug('At "%s".', timestamp)
 
 
-def get_latest(config):
+def get_latest(config: dict) -> TimedBrightness:
     """Returns the last config entry from the provided configuration."""
 
     now = stripped_datetime().time()
@@ -104,7 +93,7 @@ def get_latest(config):
 
     for timestamp, brightness in sorted_values:
         if timestamp <= now:
-            latest = (timestamp, brightness)
+            latest = TimedBrightness(timestamp, brightness)
         else:
             # Since values are sorted by timestamp,
             # stop seeking if timstamp is in the future.
@@ -120,7 +109,7 @@ def get_latest(config):
     return latest
 
 
-def get_args():
+def get_args() -> Namespace:
     """Parses the command line arguments."""
 
     parser = ArgumentParser(description='A screen backlight daemon.')
@@ -142,7 +131,8 @@ def get_args():
 class Daemon:
     """A screen backlight daemon."""
 
-    def __init__(self, backlight, config, reset=False, tick=1):
+    def __init__(self, backlight: GraphicsCard, config: dict,
+                 reset: bool = False, tick: int = 1):
         """Tries the specified graphics cards until
         a working one is found.
 

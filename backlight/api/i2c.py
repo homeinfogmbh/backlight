@@ -1,17 +1,3 @@
-# This file is part of backlight.
-#
-# backlight is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# backlight is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with backlight.  If not, see <http://www.gnu.org/licenses/>.
 """Dimming via i2c."""
 
 from hashlib import sha1
@@ -19,7 +5,8 @@ from subprocess import check_output
 
 from smbus import SMBus     # pylint: disable=E0611
 
-from backlight.api.exceptions import DoesNotExist
+from backlight.exceptions import DoesNotExist
+from backlight.types import PercentageMap
 
 
 __all__ = [
@@ -31,7 +18,10 @@ __all__ = [
 ]
 
 
-def syshash():
+CHRONTEL_CH7511B_VALUES = PercentageMap(range(1, 18), range(30, 101))
+
+
+def syshash() -> str:
     """Returns hashed PCI and CPU data."""
 
     hasher = sha1()
@@ -42,44 +32,18 @@ def syshash():
     return hasher.hexdigest()
 
 
-class PercentageMap(dict):
-    """Range of brightness raw and percentage values."""
-
-    __slots__ = ()
-
-    def __init__(self, raw, percent=range(0, 101)):
-        """Sets raw and percentage ranges."""
-        super().__init__()
-        raw_span = max(raw) - min(raw)
-        percent_span = max(percent) - min(percent)
-        percent_step = percent_span / raw_span
-        percentage = min(percent)
-
-        for raw_value in raw:
-            next_percentage = percentage + percent_step
-            self[raw_value] = range(round(percentage), round(next_percentage))
-            percentage = next_percentage
-
-    def from_percent(self, percentage):
-        """Returns the raw value for the given percentage."""
-        for raw, percent in self.items():
-            if percentage in percent:
-                return raw
-
-        raise ValueError(percentage)
-
-
 class I2CBacklight:
     """Dimming by I2C / SMBUS."""
 
-    def __init__(self, i2c_bus, chip_address, offset, values):
+    def __init__(self, bus: int, address: int, offset: int,
+                 values: PercentageMap):
         """Sets the respective I2C configuration."""
         try:
-            self.smbus = SMBus(i2c_bus)
+            self.smbus = SMBus(bus)
         except FileNotFoundError:
-            raise DoesNotExist()
+            raise DoesNotExist() from None
 
-        self.chip_address = chip_address
+        self.address = address
         self.offset = offset
         self.values = values
 
@@ -115,25 +79,23 @@ class I2CBacklight:
         else:
             raise ValueError(f'Invalid percentage: {percent}.')
 
-    def _read(self, address):
+    def _read(self, address: int) -> int:
         """Reads the respective address."""
         return self.smbus.read_i2c_block_data(
-            self.chip_address, address, 1)[0]
+            self.address, address, 1)[0]
 
-    def _write(self, address, value):
+    def _write(self, address: int, value: int):
         """Reads the respective address."""
         return self.smbus.write_i2c_block_data(
-            self.chip_address, address, [value])
+            self.address, address, [value])
 
 
 class ChrontelCH7511B(I2CBacklight):
     """Backlight API for Chrontel CH7511B."""
 
-    VALUES = PercentageMap(range(1, 18), range(30, 101))
-
-    def __init__(self, i2c_bus=0):
+    def __init__(self, bus=0):
         """Initializes the Chrontel CH7511B client."""
-        super().__init__(i2c_bus, 0x21, 0x6E, type(self).VALUES)
+        super().__init__(bus, 0x21, 0x6E, CHRONTEL_CH7511B_VALUES)
         self._write(0x7F, 0xED)     # Initialize duty cycle for PWM1.
 
 
