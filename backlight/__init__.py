@@ -8,7 +8,6 @@ from backlight.api import Xrandr
 from backlight.api import autoload
 from backlight.api import brightness
 from backlight.api import load
-from backlight.cli import main
 from backlight.daemon import Daemon
 from backlight.exceptions import DoesNotExist
 from backlight.exceptions import DoesNotSupportAPI
@@ -23,7 +22,6 @@ __all__ = [
     'load',
     'autoload',
     'brightness',
-    'main',
     'Daemon',
     'Backlight',
     'ChrontelCH7511B',
