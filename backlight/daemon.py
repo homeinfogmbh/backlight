@@ -23,6 +23,7 @@ __all__ = [
     'load_config',
     'parse_config',
     'get_latest',
+    'main',
     'Daemon'
 ]
 
@@ -128,6 +129,26 @@ def get_args() -> Namespace:
     return parser.parse_args()
 
 
+def main():
+    """Runs as a daemon."""
+
+    args = get_args()
+    basicConfig(level=DEBUG if args.debug else INFO, format=LOG_FORMAT)
+    backlight = load_backlight(args.graphics_card)
+    config = dict(parse_config(load_config(args.config_file)))
+
+    try:
+        daemon = Daemon(backlight, config, reset=args.reset, tick=args.tick)
+    except NoSupportedGraphicsCards:
+        LOGGER.error('No supported graphics cards found.')
+        return 3
+
+    if daemon.spawn():
+        return 0
+
+    return 1
+
+
 class Daemon:
     """A screen backlight daemon."""
 
@@ -145,25 +166,6 @@ class Daemon:
         self.tick = tick
         self._initial_brightness = self.brightness
         self._last = None
-
-    @classmethod
-    def run(cls):
-        """Runs as a daemon."""
-        args = get_args()
-        basicConfig(level=DEBUG if args.debug else INFO, format=LOG_FORMAT)
-        backlight = load_backlight(args.graphics_card)
-        config = dict(parse_config(load_config(args.config_file)))
-
-        try:
-            daemon = cls(backlight, config, reset=args.reset, tick=args.tick)
-        except NoSupportedGraphicsCards:
-            LOGGER.error('No supported graphics cards found.')
-            return 3
-
-        if daemon.spawn():
-            return 0
-
-        return 1
 
     @property
     def brightness(self):
