@@ -1,6 +1,10 @@
 """A linux screen backlight API, cli program and daemon."""
 
+from backlight.api import ChrontelCH7511B
 from backlight.api import GraphicsCard
+from backlight.api import I2CBacklight
+from backlight.api import LinuxBacklight
+from backlight.api import Xrandr
 from backlight.api import autoload
 from backlight.api import brightness
 from backlight.api import load
@@ -22,5 +26,9 @@ __all__ = [
     'main',
     'Daemon',
     'Backlight',
-    'GraphicsCard'
+    'ChrontelCH7511B',
+    'GraphicsCard',
+    'I2CBacklight',
+    'LinuxBacklight',
+    'Xrandr'
 ]
