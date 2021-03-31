@@ -25,9 +25,10 @@ BASEDIR = Path('/sys/class/backlight')
 class LinuxBacklight:
     """Backlight handler for graphics cards."""
 
-    def __init__(self, graphics_card: str):
+    def __init__(self, graphics_card: str, *, omit_actual: bool = False):
         """Sets the respective graphics card."""
         self._graphics_card = graphics_card
+        self.omit_actual = omit_actual
 
         if not self._path.exists():
             raise DoesNotExist()
@@ -40,18 +41,18 @@ class LinuxBacklight:
         return self._graphics_card
 
     @classmethod
-    def all(cls) -> Iterator[LinuxBacklight]:
+    def all(cls, *, omit_actual: bool = False) -> Iterator[LinuxBacklight]:
         """Seeks BASEDIR for available graphics card and yields them."""
         for graphics_card in BASEDIR.iterdir():
             with suppress(DoesNotExist, DoesNotSupportAPI):
-                yield cls(str(graphics_card))
+                yield cls(str(graphics_card), omit_actual=omit_actual)
 
     @classmethod
-    def any(cls) -> LinuxBacklight:
+    def any(cls, *, omit_actual: bool = False) -> LinuxBacklight:
         """Seeks BASEDIR for available graphics card and returns
         backlight for the first graphics card that implements the API.
         """
-        for linux_backlight in cls.all():
+        for linux_backlight in cls.all(omit_actual=omit_actual):
             return linux_backlight
 
         raise NoSupportedGraphicsCards()
@@ -76,6 +77,9 @@ class LinuxBacklight:
     @property
     def _getter_file(self):
         """Returns the file to read the current brightness from."""
+        if self.omit_actual:
+            return self._setter_file
+
         return self._path.joinpath('actual_brightness')
 
     @property
