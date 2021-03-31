@@ -13,7 +13,6 @@ setup(
     maintainer_email='<r dot neumann at homeinfo priod de>',
     license='GPLv3',
     packages=['backlight', 'backlight.api'],
-    scripts=['files/backlight', 'files/backlightd'],
     entry_points={
         'console_scripts': [
             'backlight = backlight.cli:spawn',
