@@ -6,8 +6,10 @@ Therefor it reads information from device files in
 the files 'brightness', 'actual_brightness' and 'max_brightness'
 in the respective folder.
 """
+from __future__ import annotations
 from contextlib import suppress
 from pathlib import Path
+from typing import Iterator
 
 from backlight.exceptions import DoesNotExist
 from backlight.exceptions import DoesNotSupportAPI
@@ -38,13 +40,19 @@ class LinuxBacklight:
         return self._graphics_card
 
     @classmethod
-    def any(cls):
+    def all(cls) -> Iterator[LinuxBacklight]:
+        """Seeks BASEDIR for available graphics card and yields them."""
+        for graphics_card in BASEDIR.iterdir():
+            with suppress(DoesNotExist, DoesNotSupportAPI):
+                yield cls(str(graphics_card))
+
+    @classmethod
+    def any(cls) -> LinuxBacklight:
         """Seeks BASEDIR for available graphics card and returns
         backlight for the first graphics card that implements the API.
         """
-        for graphics_card in BASEDIR.iterdir():
-            with suppress(DoesNotExist, DoesNotSupportAPI):
-                return cls(str(graphics_card))
+        for linux_backlight in cls.all():
+            return linux_backlight
 
         raise NoSupportedGraphicsCards()
 
