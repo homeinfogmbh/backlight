@@ -26,29 +26,29 @@ __all__ = [
 GraphicsCard = Union[I2CBacklight, LinuxBacklight, Xrandr]
 
 
-def load(name: str = None) -> GraphicsCard:
+def load(name: str = None, *, omit_actual: bool = False) -> GraphicsCard:
     """Loads the backlight by the respective names."""
 
     if name is None:
         try:
             return I2C_CARDS[syshash()]()
         except (KeyError, DoesNotExist):
-            return LinuxBacklight.any()
+            return LinuxBacklight.any(omit_actual=omit_actual)
 
-    return LinuxBacklight(name)
+    return LinuxBacklight(name, omit_actual=omit_actual)
 
 
-def autoload(search: bool = False) -> GraphicsCard:
+def autoload(search: bool = False, omit_actual: bool = False) -> GraphicsCard:
     """Automatically loads a fitting graphics card."""
 
     with suppress(DoesNotExist, DoesNotSupportAPI):
-        return LinuxBacklight('acpi_video0')
+        return LinuxBacklight('acpi_video0', omit_actual=omit_actual)
 
     with suppress(KeyError, DoesNotExist):
         return I2C_CARDS[syshash()]()
 
     if search:
-        return LinuxBacklight.any()
+        return LinuxBacklight.any(omit_actual=omit_actual)
 
     return Xrandr()
 

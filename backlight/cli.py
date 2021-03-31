@@ -22,6 +22,9 @@ def get_args() -> Namespace:
     parser.add_argument('--graphics-card', help='specifies the graphics card')
     parser.add_argument(
         '--raw', action='store_true', help='work with raw values')
+    parser.add_argument(
+        '--omit-actual', action='store_true',
+        help='do not use actual_brightness')
     return parser.parse_args()
 
 
@@ -51,7 +54,7 @@ def main() -> int:
     args = get_args()
 
     try:
-        graphics_card = load(args.graphics_card)
+        graphics_card = load(args.graphics_card, omit_actual=args.omit_actual)
     except NoSupportedGraphicsCards:
         print('No supported graphics cards found.', file=stderr, flush=True)
         return 3
