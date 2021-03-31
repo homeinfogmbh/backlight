@@ -15,7 +15,7 @@ setup(
     packages=['backlight', 'backlight.api'],
     entry_points={
         'console_scripts': [
-            'backlight = backlight.cli:spawn',
+            'backlight = backlight.cli:main',
             'backlightd = backlight.daemon:main'
         ]
     },
