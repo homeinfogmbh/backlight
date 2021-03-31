@@ -92,11 +92,12 @@ def get_args() -> Namespace:
     parser = ArgumentParser(description='A screen backlight CLI interface.')
     parser.add_argument('value', type=IntegerDifferential, nargs='?')
     parser.add_argument(
-        '-l', '--load', type=Path, default=BACKUP_FILE,
-        help='load brightness from file')
+        '-l', '--load', action='store_true', help='load brightness from file')
     parser.add_argument(
-        '-s', '--save', type=Path, default=BACKUP_FILE,
-        help='save brightness to file')
+        '-s', '--save', action='store_true', help='save brightness to file')
+    parser.add_argument(
+        '-f', '--file', type=Path, default=BACKUP_FILE, metavar='filename',
+        help='brightness backup file')
     parser.add_argument(
         '--max', action='store_true', help='returns the maximum raw value')
     parser.add_argument('--graphics-card', help='specifies the graphics card')
@@ -126,10 +127,10 @@ def main() -> int:
 
     if args.value is None:
         if args.load:
-            return load_value(graphics_card, args.load)
+            return load_value(graphics_card, args.file)
 
         if args.save:
-            return save_value(graphics_card, args.save)
+            return save_value(graphics_card, args.file)
 
         if args.raw:
             print(graphics_card.raw, flush=True)
