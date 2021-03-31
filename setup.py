@@ -19,6 +19,5 @@ setup(
             'backlightd = backlight.daemon:main'
         ]
     },
-    data_files=[('/usr/share/licenses/backlight/', ['LICENSE'])],
     description='A screen backlight API and daemon.'
 )
