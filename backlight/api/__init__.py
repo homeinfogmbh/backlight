@@ -17,7 +17,9 @@ __all__ = [
     'brightness',
     'ChrontelCH7511B',
     'GraphicsCard',
-    'I2CBacklight'
+    'I2CBacklight',
+    'LinuxBacklight',
+    'Xrandr'
 ]
 
 
