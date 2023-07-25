@@ -3,12 +3,7 @@
 from typing import NamedTuple
 
 
-__all__ = [
-    'Backlight',
-    'IntegerDifferential',
-    'PercentageMap',
-    'TimedBrightness'
-]
+__all__ = ["Backlight", "IntegerDifferential", "PercentageMap", "TimedBrightness"]
 
 
 class Backlight(NamedTuple):
@@ -24,8 +19,8 @@ class IntegerDifferential(int):
     def __new__(cls, value):
         if isinstance(value, str):
             value = value.strip()
-            increase = value.startswith('+')
-            decrease = value.startswith('-')
+            increase = value.startswith("+")
+            decrease = value.startswith("-")
         else:
             increase = None
             decrease = None

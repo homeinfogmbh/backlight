@@ -11,15 +11,15 @@ from backlight.types import Backlight
 
 
 __all__ = [
-    'I2C_CARDS',
-    'load',
-    'autoload',
-    'brightness',
-    'ChrontelCH7511B',
-    'GraphicsCard',
-    'I2CBacklight',
-    'LinuxBacklight',
-    'Xrandr'
+    "I2C_CARDS",
+    "load",
+    "autoload",
+    "brightness",
+    "ChrontelCH7511B",
+    "GraphicsCard",
+    "I2CBacklight",
+    "LinuxBacklight",
+    "Xrandr",
 ]
 
 
@@ -42,7 +42,7 @@ def autoload(search: bool = False, omit_actual: bool = False) -> GraphicsCard:
     """Automatically loads a fitting graphics card."""
 
     with suppress(DoesNotExist, DoesNotSupportAPI):
-        return LinuxBacklight('acpi_video0', omit_actual=omit_actual)
+        return LinuxBacklight("acpi_video0", omit_actual=omit_actual)
 
     with suppress(KeyError, DoesNotExist):
         return I2C_CARDS[syshash()]()
@@ -65,10 +65,10 @@ def brightness(percent: int) -> Backlight:
         backlight.raw = min(backlight.values)
 
     if isinstance(backlight, LinuxBacklight):
-        method = 'Linux'
+        method = "Linux"
     elif isinstance(backlight, I2CBacklight):
-        method = 'I2C / SMBus'
+        method = "I2C / SMBus"
     else:
-        method = 'xrandr'
+        method = "xrandr"
 
     return Backlight(backlight.percent, method)

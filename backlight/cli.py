@@ -10,16 +10,17 @@ from backlight.exceptions import NoSupportedGraphicsCards
 from backlight.types import IntegerDifferential
 
 
-__all__ = ['main']
+__all__ = ["main"]
 
 
-BACKUP_FILE = Path('/etc/backlight')
-LOG_FORMAT = '[%(levelname)s] %(name)s: %(message)s'
-LOGGER = getLogger('brightness')
+BACKUP_FILE = Path("/etc/backlight")
+LOG_FORMAT = "[%(levelname)s] %(name)s: %(message)s"
+LOGGER = getLogger("brightness")
 
 
-def _set_value(graphics_card: GraphicsCard, value: IntegerDifferential, *,
-               raw: bool = False) -> None:
+def _set_value(
+    graphics_card: GraphicsCard, value: IntegerDifferential, *, raw: bool = False
+) -> None:
     """Sets the brightness."""
 
     if raw:
@@ -38,20 +39,21 @@ def _set_value(graphics_card: GraphicsCard, value: IntegerDifferential, *,
         graphics_card.percent = value
 
 
-def set_value(graphics_card: GraphicsCard, value: IntegerDifferential, *,
-              raw: bool = False) -> int:
+def set_value(
+    graphics_card: GraphicsCard, value: IntegerDifferential, *, raw: bool = False
+) -> int:
     """Sets the brightness and handles errors."""
 
     try:
         _set_value(graphics_card, value, raw=raw)
     except ValueError:
-        LOGGER.error('Invalid percentage: %s.', value)
+        LOGGER.error("Invalid percentage: %s.", value)
         return 1
     except PermissionError:
-        LOGGER.error('Cannot set brightness. Try running as root.')
+        LOGGER.error("Cannot set brightness. Try running as root.")
         return 2
     except OSError:
-        LOGGER.error('Invalid brightness: %s.', value)
+        LOGGER.error("Invalid brightness: %s.", value)
         return 3
 
     return 0
@@ -61,13 +63,13 @@ def load_value(graphics_card: GraphicsCard, backup_file: Path) -> int:
     """Loads from a backup file."""
 
     try:
-        with backup_file.open('r') as file:
+        with backup_file.open("r") as file:
             value = IntegerDifferential(file.read().strip())
     except (FileNotFoundError, PermissionError) as error:
         LOGGER.error(str(error))
         return 1
     except ValueError:
-        LOGGER.error('Backup file contains garbage: %s', backup_file)
+        LOGGER.error("Backup file contains garbage: %s", backup_file)
         return 2
 
     return set_value(graphics_card, value, raw=True)
@@ -77,7 +79,7 @@ def save_value(graphics_card: GraphicsCard, backup_file: Path) -> int:
     """Saves backlight to file."""
 
     try:
-        with backup_file.open('w') as file:
+        with backup_file.open("w") as file:
             file.write(str(graphics_card.raw))
     except (FileNotFoundError, PermissionError) as error:
         LOGGER.error(str(error))
@@ -89,23 +91,30 @@ def save_value(graphics_card: GraphicsCard, backup_file: Path) -> int:
 def get_args() -> Namespace:
     """Parses the command line arguments."""
 
-    parser = ArgumentParser(description='A screen backlight CLI interface.')
-    parser.add_argument('value', type=IntegerDifferential, nargs='?')
+    parser = ArgumentParser(description="A screen backlight CLI interface.")
+    parser.add_argument("value", type=IntegerDifferential, nargs="?")
     parser.add_argument(
-        '-l', '--load', action='store_true', help='load brightness from file')
+        "-l", "--load", action="store_true", help="load brightness from file"
+    )
     parser.add_argument(
-        '-s', '--save', action='store_true', help='save brightness to file')
+        "-s", "--save", action="store_true", help="save brightness to file"
+    )
     parser.add_argument(
-        '-f', '--file', type=Path, default=BACKUP_FILE, metavar='filename',
-        help='brightness backup file')
+        "-f",
+        "--file",
+        type=Path,
+        default=BACKUP_FILE,
+        metavar="filename",
+        help="brightness backup file",
+    )
     parser.add_argument(
-        '--max', action='store_true', help='returns the maximum raw value')
-    parser.add_argument('--graphics-card', help='specifies the graphics card')
+        "--max", action="store_true", help="returns the maximum raw value"
+    )
+    parser.add_argument("--graphics-card", help="specifies the graphics card")
+    parser.add_argument("--raw", action="store_true", help="work with raw values")
     parser.add_argument(
-        '--raw', action='store_true', help='work with raw values')
-    parser.add_argument(
-        '--omit-actual', action='store_true',
-        help='do not use actual_brightness')
+        "--omit-actual", action="store_true", help="do not use actual_brightness"
+    )
     return parser.parse_args()
 
 
@@ -118,7 +127,7 @@ def main() -> int:
     try:
         graphics_card = load(args.graphics_card, omit_actual=args.omit_actual)
     except NoSupportedGraphicsCards:
-        LOGGER.error('No supported graphics cards found.')
+        LOGGER.error("No supported graphics cards found.")
         return 3
 
     if args.max:

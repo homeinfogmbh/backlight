@@ -2,11 +2,11 @@
 
 
 __all__ = [
-    'DoesNotExist',
-    'DoesNotSupportAPI',
-    'NoOutputFound',
-    'NoSupportedGraphicsCards',
-    'NoLatestEntry'
+    "DoesNotExist",
+    "DoesNotSupportAPI",
+    "NoOutputFound",
+    "NoSupportedGraphicsCards",
+    "NoLatestEntry",
 ]
 
 

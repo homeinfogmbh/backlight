@@ -16,10 +16,10 @@ from backlight.exceptions import DoesNotSupportAPI
 from backlight.exceptions import NoSupportedGraphicsCards
 
 
-__all__ = ['LinuxBacklight']
+__all__ = ["LinuxBacklight"]
 
 
-BASEDIR = Path('/sys/class/backlight')
+BASEDIR = Path("/sys/class/backlight")
 
 
 class LinuxBacklight:
@@ -67,12 +67,12 @@ class LinuxBacklight:
     @property
     def _max_file(self):
         """Returns the path of the maximum brightness file."""
-        return self._path.joinpath('max_brightness')
+        return self._path.joinpath("max_brightness")
 
     @property
     def _setter_file(self):
         """Returns the path of the backlight file."""
-        return self._path.joinpath('brightness')
+        return self._path.joinpath("brightness")
 
     @property
     def _getter_file(self):
@@ -80,7 +80,7 @@ class LinuxBacklight:
         if self.omit_actual:
             return self._setter_file
 
-        return self._path.joinpath('actual_brightness')
+        return self._path.joinpath("actual_brightness")
 
     @property
     def _files(self):
@@ -90,20 +90,20 @@ class LinuxBacklight:
     @property
     def max(self):
         """Returns the maximum brightness as integer."""
-        with self._max_file.open('r') as file:
+        with self._max_file.open("r") as file:
             return int(file.read().strip())
 
     @property
     def raw(self):
         """Returns the raw brightness."""
-        with self._getter_file.open('r') as file:
+        with self._getter_file.open("r") as file:
             return int(file.read().strip())
 
     @raw.setter
     def raw(self, brightness):
         """Sets the raw brightness."""
-        with self._setter_file.open('w') as file:
-            file.write(f'{brightness}\n')
+        with self._setter_file.open("w") as file:
+            file.write(f"{brightness}\n")
 
     @property
     def percent(self):
@@ -116,4 +116,4 @@ class LinuxBacklight:
         if 0 <= percent <= 100:
             self.raw = self.max * percent // 100
         else:
-            raise ValueError(f'Invalid percentage: {percent}.')
+            raise ValueError(f"Invalid percentage: {percent}.")

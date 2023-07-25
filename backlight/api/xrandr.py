@@ -7,27 +7,28 @@ from subprocess import check_output
 from backlight.exceptions import NoOutputFound
 
 
-__all__ = ['Xrandr']
+__all__ = ["Xrandr"]
 
 
-XRANDR = '/usr/bin/xrandr'
+XRANDR = "/usr/bin/xrandr"
 
 
-def _xrandr(display: int, verbose: bool = False, output: str = None,
-            brightness: int = None) -> str:
+def _xrandr(
+    display: int, verbose: bool = False, output: str = None, brightness: int = None
+) -> str:
     """Runs the respective xrandr command."""
 
     command = [XRANDR]
 
     if verbose:
-        command.append('--verbose')
+        command.append("--verbose")
 
     if output is not None:
-        command.append('--output')
+        command.append("--output")
         command.append(output)
 
     if brightness is not None:
-        command.append('--brightness')
+        command.append("--brightness")
         command.append(brightness)
 
     with Display(display):
@@ -37,11 +38,11 @@ def _xrandr(display: int, verbose: bool = False, output: str = None,
 def _get_output(display: int) -> str:
     """Determines the active output."""
 
-    for line in _xrandr(display).split('\n'):
-        if 'connected' in line:
+    for line in _xrandr(display).split("\n"):
+        if "connected" in line:
             output, state, *_ = line.split()
 
-            if state == 'connected':
+            if state == "connected":
                 return output
 
     raise NoOutputFound()
@@ -53,14 +54,14 @@ def _get_brightness(display: int) -> float:
     active_output = _get_output(display)
     output = None
 
-    for line in _xrandr(display, verbose=True).split('\n'):
-        if output == active_output and line.startswith('\t'):
+    for line in _xrandr(display, verbose=True).split("\n"):
+        if output == active_output and line.startswith("\t"):
             try:
-                key, value = line.split(':', maxsplit=1)
+                key, value = line.split(":", maxsplit=1)
             except ValueError:
                 continue
 
-            if key.strip() == 'Brightness':
+            if key.strip() == "Brightness":
                 return float(value.strip())
         else:
             with suppress(ValueError):
@@ -81,20 +82,20 @@ class Display(int):
 
     def __str__(self):
         """Returns a colon, followed by the display ID."""
-        return f':{int(self)}'
+        return f":{int(self)}"
 
     def __enter__(self):
         """Stores the previously set display and sets the
         DISPLAY environment variable to the current display.
         """
-        self._previous, environ['DISPLAY'] = environ.get('DISPLAY'), str(self)
+        self._previous, environ["DISPLAY"] = environ.get("DISPLAY"), str(self)
 
     def __exit__(self, *_):
         """Resets the DISPLAY environment variable."""
         if self._previous is None:
-            del environ['DISPLAY']
+            del environ["DISPLAY"]
         else:
-            environ['DISPLAY'] = self._previous
+            environ["DISPLAY"] = self._previous
 
 
 class Xrandr:
@@ -107,7 +108,7 @@ class Xrandr:
     @property
     def raw(self):
         """Returns the raw value."""
-        return _get_brightness(self.display) or 0   # Compensate for None.
+        return _get_brightness(self.display) or 0  # Compensate for None.
 
     @raw.setter
     def raw(self, value):

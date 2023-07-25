@@ -16,17 +16,17 @@ from backlight.types import Backlight
 
 
 __all__ = [
-    'DoesNotExist',
-    'DoesNotSupportAPI',
-    'NoSupportedGraphicsCards',
-    'load',
-    'autoload',
-    'brightness',
-    'Daemon',
-    'Backlight',
-    'ChrontelCH7511B',
-    'GraphicsCard',
-    'I2CBacklight',
-    'LinuxBacklight',
-    'Xrandr'
+    "DoesNotExist",
+    "DoesNotSupportAPI",
+    "NoSupportedGraphicsCards",
+    "load",
+    "autoload",
+    "brightness",
+    "Daemon",
+    "Backlight",
+    "ChrontelCH7511B",
+    "GraphicsCard",
+    "I2CBacklight",
+    "LinuxBacklight",
+    "Xrandr",
 ]

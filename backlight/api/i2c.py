@@ -3,19 +3,13 @@
 from hashlib import sha1
 from subprocess import check_output
 
-from smbus import SMBus     # pylint: disable=E0611
+from smbus import SMBus  # pylint: disable=E0611
 
 from backlight.exceptions import DoesNotExist
 from backlight.types import PercentageMap
 
 
-__all__ = [
-    'syshash',
-    'PercentageMap',
-    'I2CBacklight',
-    'ChrontelCH7511B',
-    'I2C_CARDS'
-]
+__all__ = ["syshash", "PercentageMap", "I2CBacklight", "ChrontelCH7511B", "I2C_CARDS"]
 
 
 CHRONTEL_CH7511B_VALUES = PercentageMap(range(1, 18), range(30, 101))
@@ -25,9 +19,9 @@ def syshash() -> str:
     """Returns hashed PCI and CPU data."""
 
     hasher = sha1()
-    lspci = check_output('/usr/bin/lspci')
+    lspci = check_output("/usr/bin/lspci")
     hasher.update(lspci)
-    cpu_model = check_output(('/usr/bin/grep', 'model', '/proc/cpuinfo'))
+    cpu_model = check_output(("/usr/bin/grep", "model", "/proc/cpuinfo"))
     hasher.update(cpu_model)
     return hasher.hexdigest()
 
@@ -35,8 +29,7 @@ def syshash() -> str:
 class I2CBacklight:
     """Dimming by I2C / SMBUS."""
 
-    def __init__(self, bus: int, address: int, offset: int,
-                 values: PercentageMap):
+    def __init__(self, bus: int, address: int, offset: int, values: PercentageMap):
         """Sets the respective I2C configuration."""
         try:
             self.smbus = SMBus(bus)
@@ -77,17 +70,15 @@ class I2CBacklight:
         if 0 <= percent <= 100:
             self.raw = self.values.from_percent(percent)
         else:
-            raise ValueError(f'Invalid percentage: {percent}.')
+            raise ValueError(f"Invalid percentage: {percent}.")
 
     def _read(self, address: int) -> int:
         """Reads the respective address."""
-        return self.smbus.read_i2c_block_data(
-            self.address, address, 1)[0]
+        return self.smbus.read_i2c_block_data(self.address, address, 1)[0]
 
     def _write(self, address: int, value: int):
         """Reads the respective address."""
-        return self.smbus.write_i2c_block_data(
-            self.address, address, [value])
+        return self.smbus.write_i2c_block_data(self.address, address, [value])
 
 
 class ChrontelCH7511B(I2CBacklight):
@@ -96,7 +87,7 @@ class ChrontelCH7511B(I2CBacklight):
     def __init__(self, bus=0):
         """Initializes the Chrontel CH7511B client."""
         super().__init__(bus, 0x21, 0x6E, CHRONTEL_CH7511B_VALUES)
-        self._write(0x7F, 0xED)     # Initialize duty cycle for PWM1.
+        self._write(0x7F, 0xED)  # Initialize duty cycle for PWM1.
 
 
-I2C_CARDS = {'53af5eabb6e32c257237ff18b3f047e9fa5e42fd': ChrontelCH7511B}
+I2C_CARDS = {"53af5eabb6e32c257237ff18b3f047e9fa5e42fd": ChrontelCH7511B}
